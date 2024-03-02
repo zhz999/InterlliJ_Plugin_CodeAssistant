@@ -1,0 +1,2 @@
+### [idea插件开发文档](https://www.ideaplugin.com/idea-docs/Part%20II%20%E2%80%94%20Base%20Platform/Settings/Settings%20Tutorial.html#%E5%88%9B%E5%BB%BAappsettingscomponent)
+- [Plugin Install](https://plugins.jetbrains.com/plugin/23884---)

@@ -13,7 +13,7 @@ class OpenSettingsAction : AnAction(
 ) {
     override fun actionPerformed(e: AnActionEvent) {
         ShowSettingsUtil.getInstance()
-            .showSettingsDialog(e.project, GeneralSettingsConfigurable::class.java)
+            .showSettingsDialog(e.project, CodeAssistantSettingsConfigurable::class.java)
     }
 }
 

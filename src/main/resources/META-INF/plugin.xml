@@ -1,47 +1,26 @@
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin>
-    <!-- Unique identifier of the plugin. It should be FQN. It cannot be changed between the plugin versions. -->
-    <id>com.zhz.bytedance.Development_Assistant_ZHZ</id>
-<!--    <depends>com.example.another-plugin</depends>-->
-    <!-- Public plugin name should be written in Title Case.
-         Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-name -->
+    <id>CodeAssistant</id>
     <name>开发助手</name>
     <depends>com.intellij.modules.platform</depends>
-    <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
-    <vendor email="zhanghongzhong@bytedance.com" url="https://www.zhanghongzhong.com">zhanghongzhong@bytedance.com</vendor>
-
-    <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
-         Simple HTML elements (text formatting, paragraphs, and lists) can be added inside of <![CDATA[ ]]> tag.
-         Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-description -->
+    <depends>com.intellij.modules.lang</depends>
+    <vendor email="zhanghongzhong@bytedance.com">zhanghongzhong</vendor>
     <description>
         <![CDATA[
-            <ul>
-            <li><b>2.0.0</b> 开发助手 plugin.</li>
-            <li><b>1.0.0</b> png 转 icns (macOS) plugin.</li>
-          </ul>
+            1. Download the Plugin
+            2. Configuration ollama
+            3. use CodeAssistant
         ]]>
     </description>
     <change-notes>
         <![CDATA[
-          <ul>
-            <li><b>2.0.0</b> ADD: png 转 icns (macOS).</li>
-            <li><b>1.0.0</b> ADD: 开发助手.</li>
-          </ul>
+            1.0.0 add CodeAssistant
+            1.0.6 publish CodeAssistant : idea202225_sinceBuild222_untilBuild233*
         ]]>
     </change-notes>
-    <!-- Product and plugin compatibility requirements.
-         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
-    <depends>com.intellij.modules.platform</depends>
-
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
-        <applicationConfigurable
-                id="settings.dev"
-                parentId="tools"
-                displayName="开发助手"
-                instance="settings.GeneralSettingsConfigurable"
-        />
 
         <toolWindow id="开发助手"
                     icon="com.zhz.bytedance.development_assistant_zhz.Icons.DefaultSmall"
@@ -52,13 +31,13 @@
         <statusBarWidgetFactory
                 order="first"
                 id="dev.statusbar.widget"
-                implementation="statusbar.DemoStatusBarWidgetFactory"/>
+                implementation="statusbar.CodeStatusBarWidgetFactory"/>
 
-        <!--        https://github.com/JetBrains/intellij-sdk-code-samples/blob/main/settings/src/main/resources/META-INF/plugin.xml-->
-        <applicationConfigurable parentId="tools" instance="settings.AppSettingsConfigurable"
-                                 id="org.intellij.sdk.settings.AppSettingsConfigurable"
-                                 displayName="SDK: Application Settings Example"/>
-        <applicationService serviceImplementation="settings.AppSettingsState"/>
+        <applicationConfigurable parentId="tools"
+                                 instance="settings.CodeAssistantSettingsConfigurable"
+                                 id="settings.CodeAssistantSettingsConfigurable"
+                                 displayName="开发助手"/>
+        <applicationService serviceImplementation="settings.CodeAssistantSettingsState"/>
     </extensions>
     <actions>
         <action id="DevAction"
@@ -84,7 +63,7 @@
             <override-text place="popup" use-text-of-place="MainMenu"/>
         </action>
         <group id="DevAction.statusBarPopup">
-            <reference id="DevAction.openSettings" />
+            <reference id="DevAction.openSettings"/>
         </group>
 
     </actions>

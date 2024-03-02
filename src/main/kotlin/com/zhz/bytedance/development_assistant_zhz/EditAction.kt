@@ -11,6 +11,7 @@ import com.intellij.ui.ColorUtil
 import com.intellij.ui.JBColor
 import com.intellij.ui.content.ContentFactory
 import com.intellij.util.ui.JBUI
+import settings.CodeAssistantSettingsState
 import java.awt.*
 import java.io.BufferedReader
 import java.io.IOException
@@ -141,11 +142,12 @@ class EditAction : ToolWindowFactory {
         val doc = textPane.styledDocument
         val style: Style = doc.addStyle("default", null)
         StyleConstants.setFontSize(style, 10);
-        val postData = "{\"model\": \"gemma:7b\",\"messages\": [{\"role\": \"user\",\"content\": \"${inputText}\"}]}"
+        val settings: CodeAssistantSettingsState = CodeAssistantSettingsState.getInstance()
+        val postData = "{\"model\": \"${settings.model}\",\"messages\": [{\"role\": \"user\",\"content\": \"${inputText}\"}]}"
         val worker = object : SwingWorker<Void, String>() {
             override fun doInBackground(): Void? {
                 try {
-                    val url = URL("http://127.0.0.1:11434/api/chat")
+                    val url = URL(settings.uri)
                     val connection = url.openConnection() as HttpURLConnection
                     connection.requestMethod = "POST"
                     connection.doOutput = true
@@ -189,7 +191,7 @@ class EditAction : ToolWindowFactory {
                         buttonPanel.setEnabled(true)
                         submitButton.setEnabled(true);
                         submitButton.icon = IconLoader.getIcon("/icons/send.svg", javaClass)
-                        JOptionPane.showMessageDialog(panel, "输入的文本是：${connection.responseMessage}")
+                        JOptionPane.showMessageDialog(panel, "Request Failed：${connection.responseMessage}")
                     }
                 } catch (ex: Exception) {
                     jTextField.setEnabled(true);
@@ -197,6 +199,7 @@ class EditAction : ToolWindowFactory {
                     submitButton.setEnabled(true);
                     submitButton.icon = IconLoader.getIcon("/icons/send.svg", javaClass)
                     println(ex.localizedMessage)
+                    JOptionPane.showMessageDialog(panel, "Request Exception：${ex.localizedMessage}")
                 }
                 return null
             }
