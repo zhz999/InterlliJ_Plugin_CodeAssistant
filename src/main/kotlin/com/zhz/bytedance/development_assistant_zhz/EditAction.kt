@@ -26,7 +26,8 @@ import javax.swing.text.html.HTMLEditorKit
 
 class EditAction : ToolWindowFactory {
 
-    private val response = StringBuilder()
+    private val settings: CodeAssistantSettingsState = CodeAssistantSettingsState.getInstance()
+
 
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
         try {
@@ -102,7 +103,30 @@ class EditAction : ToolWindowFactory {
         buttonPanel.add(jTextField, BorderLayout.WEST)
         buttonPanel.add(submitButton, BorderLayout.EAST)
         buttonPanel.minimumSize = Dimension(Int.MAX_VALUE, 46)
-        panel.add(buttonPanel, BorderLayout.SOUTH)
+
+        // 工具Panel
+        val toolPanel = JPanel()
+        toolPanel.setLayout(BorderLayout())
+        toolPanel.minimumSize = Dimension(Int.MAX_VALUE, 46)
+        val ll = DefaultComboBoxModel<String>()
+        ll.addElement("mistral")
+        ll.addElement("codellama")
+        ll.addElement("gemma:7b")
+        val modelList = JComboBox(ll)
+        modelList.selectedItem = settings.model
+        toolPanel.add(modelList, BorderLayout.EAST)
+        modelList.addActionListener {
+            settings.model =  modelList.getItemAt(modelList.getSelectedIndex())
+        }
+
+
+        val downPanel = JPanel()
+        downPanel.setLayout(BorderLayout())//上下布局
+        downPanel.add(toolPanel, BorderLayout.NORTH)//上
+        downPanel.add(buttonPanel, BorderLayout.SOUTH)//下
+
+
+        panel.add(downPanel, BorderLayout.SOUTH)
 
         // 添加回车事件监听器
         jTextField.addActionListener { // 在这里处理回车事件的逻辑
@@ -164,7 +188,7 @@ class EditAction : ToolWindowFactory {
                     if (responseCode == HttpURLConnection.HTTP_OK) {
                         publish("begin ++++++++++++++++++++++ Chat: $inputText ++++++++++++++++++++ \r\n\n")
                         val inputStream = connection.inputStream
-                        val reader = BufferedReader(InputStreamReader(inputStream))
+                        val reader = BufferedReader(InputStreamReader(inputStream,"utf-8"))
                         var line: String?
                         while (reader.readLine().also { line = it } != null) {
                             val gson = Gson()
@@ -206,11 +230,15 @@ class EditAction : ToolWindowFactory {
 
             override fun process(chunks: MutableList<String>?) {
                 for (chunk in chunks!!) {
-                    doc.insertString(doc.length, chunk, style);
+//                    val stringAsByteArray = chunk.toByteArray()
+//                    val utf8String = String(stringAsByteArray, Charsets.UTF_8)
+                    doc.insertString(doc.length,  chunk, style);
                 }
             }
         }
         worker.execute()
     }
 }
+
+data class Person(val label: String,val value : String)
 

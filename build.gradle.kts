@@ -36,7 +36,7 @@ dependencies {
 }
 
 group = "com.zhz.bytedance.development_assistant_zhz"
-version = "1.6.0"
+version = "1.0.0"
 
 application {
     mainClass.set("$group.$name.ApplicationKt")

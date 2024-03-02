@@ -7,15 +7,14 @@
     <vendor email="zhanghongzhong@bytedance.com">zhanghongzhong</vendor>
     <description>
         <![CDATA[
-            1. Download the Plugin
-            2. Configuration ollama
-            3. use CodeAssistant
+            - 1. Download the Plugin
+            - 2. Configuration ollama
+            - 3. use CodeAssistant
         ]]>
     </description>
     <change-notes>
         <![CDATA[
-            1.0.0 add CodeAssistant
-            1.0.6 publish CodeAssistant : idea202225_sinceBuild222_untilBuild233*
+            1.0.0 add CodeAssistant : idea202225_sinceBuild222_untilBuild233*
         ]]>
     </change-notes>
     <!-- Extension points defined by the plugin.
