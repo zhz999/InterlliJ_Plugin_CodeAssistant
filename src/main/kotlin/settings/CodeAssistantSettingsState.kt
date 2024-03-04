@@ -6,10 +6,7 @@ import com.intellij.openapi.components.Storage;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 import org.jetbrains.annotations.*;
 
-@State(
-    name = "CodeAssistantSettings",
-    storages = [Storage("CodeAssistantSettings.xml")]
-)
+@State(name = "CodeAssist_Settings",storages = [Storage("CodeAssist_Settings.xml")])
 final class CodeAssistantSettingsState : PersistentStateComponent<CodeAssistantSettingsState> {
     var userId = "zhanghongzhong@bytedance.com"
     var ideaStatus = false
@@ -30,6 +27,5 @@ final class CodeAssistantSettingsState : PersistentStateComponent<CodeAssistantS
             return ApplicationManager.getApplication().getService(CodeAssistantSettingsState::class.java)
         }
     }
-
 
 }

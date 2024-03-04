@@ -9,7 +9,7 @@ import com.intellij.openapi.ui.popup.ListPopup
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.wm.StatusBarWidget
 import com.intellij.openapi.wm.impl.status.EditorBasedStatusBarPopup;
-import com.zhz.bytedance.development_assistant_zhz.Icons
+import icons.Icons
 
 class CodeStatusBarWidget(project: Project) : EditorBasedStatusBarPopup(project, false) {
 

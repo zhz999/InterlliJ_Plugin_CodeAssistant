@@ -7,14 +7,19 @@
     <vendor email="zhanghongzhong@bytedance.com">zhanghongzhong</vendor>
     <description>
         <![CDATA[
-            - 1. Download the Plugin
-            - 2. Configuration ollama
-            - 3. use CodeAssistant
+          <ul>
+            <li>1. Download the Plugin</li>
+            <li>2. Configuration ollama</li>
+            <li>3. use CodeAssistant</li>
+          </ul>
         ]]>
     </description>
     <change-notes>
         <![CDATA[
-            1.0.0 add CodeAssistant : idea202225_sinceBuild222_untilBuild233*
+          <ul>
+            <li>### 1.0.0 : idea2023_sinceBuild212_untilBuild*</li>
+            <li>### 1.0.1 : idea2023_sinceBuild232_untilBuild*</li>
+          </ul>
         ]]>
     </change-notes>
     <!-- Extension points defined by the plugin.
@@ -22,47 +27,78 @@
     <extensions defaultExtensionNs="com.intellij">
 
         <toolWindow id="开发助手"
-                    icon="com.zhz.bytedance.development_assistant_zhz.Icons.DefaultSmall"
+                    icon="Icons.DefaultSmall"
                     anchor="right"
                     secondary="true"
-                    factoryClass="com.zhz.bytedance.development_assistant_zhz.EditAction"/>
+                    factoryClass="com.zhz.bytedance.development_assistant_zhz.ChatWindow"/>
 
         <statusBarWidgetFactory
                 order="first"
                 id="dev.statusbar.widget"
                 implementation="statusbar.CodeStatusBarWidgetFactory"/>
 
-        <applicationConfigurable parentId="tools"
-                                 instance="settings.CodeAssistantSettingsConfigurable"
-                                 id="settings.CodeAssistantSettingsConfigurable"
-                                 displayName="开发助手"/>
+        <applicationConfigurable
+                id="settings.CodeAssistant"
+                parentId="tools"
+                instance="settings.CodeAssistantSettingsConfigurable"
+                displayName="开发助手"/>
         <applicationService serviceImplementation="settings.CodeAssistantSettingsState"/>
+
+        <applicationConfigurable
+                id="settings.Configuration"
+                parentId="settings.CodeAssistant"
+                displayName="Editor Configuration"
+                instance="settings.configuration.ConfigurationConfigurable"/>
+        <applicationService serviceImplementation="settings.configuration.ConfigurationSettings"/>
+
     </extensions>
     <actions>
-        <action id="DevAction"
-                class="com.zhz.bytedance.development_assistant_zhz.DevAction"
-                text="开发助手"
+<!--        <action id="DevAction"-->
+<!--                class="com.zhz.bytedance.development_assistant_zhz.DevAction"-->
+<!--                text="Open Assistant"-->
+<!--                popup="true"-->
+<!--                icon="Icons.DefaultSmall">-->
+<!--            <add-to-group group-id="EditorPopupMenu1" anchor="first"/>-->
+<!--        </action>-->
+
+        <action id="Png-icons"
+                class="com.zhz.bytedance.development_assistant_zhz.PngToIcon"
                 popup="true"
-                icon="com.zhz.bytedance.development_assistant_zhz.Icons.DefaultSmall">
-            <add-to-group group-id="EditorPopupMenu1" anchor="first"/>
-        </action>
-        <action id="PngToicns"
-                class="com.zhz.bytedance.development_assistant_zhz.PngToicns"
-                popup="true"
-                icon="com.zhz.bytedance.development_assistant_zhz.Icons.DefaultSmall"
-                text="Png 转 Icns">
+                icon="Icons.DefaultSmall"
+                text="Png 转 Icons">
             <add-to-group group-id="ToolsMenu" anchor="first"/>
         </action>
+
         <action
                 id="DevAction.openSettings"
-                icon="com.zhz.bytedance.development_assistant_zhz.Icons.DefaultSmall"
+                icon="Icons.DefaultSmall"
                 text="Open Settings"
                 class="settings.OpenSettingsAction">
             <override-text place="MainMenu" text="Open Settings"/>
             <override-text place="popup" use-text-of-place="MainMenu"/>
         </action>
+
         <group id="DevAction.statusBarPopup">
             <reference id="DevAction.openSettings"/>
+        </group>
+
+        <group id="editor.EditorPopupMenu1"
+               class="editor.EditorPopupMenu1"
+               text="Quick Action"
+               description="Quick action"
+               icon="Icons.DefaultSmall"
+        >
+            <add-to-group group-id="EditorPopupMenu1" anchor="first"/>
+        </group>
+
+        <group id="CodeAssistEditorPopup">
+            <group id="action.editor.EditorActionGroup"
+                   text="Code Assistant"
+                   class="com.intellij.openapi.actionSystem.DefaultActionGroup"
+                   popup="true"
+                   icon="icons.Icons.DefaultSmall">
+            </group>
+            <add-to-group group-id="EditorPopupMenu1" anchor="first"/>
         </group>
 
     </actions>

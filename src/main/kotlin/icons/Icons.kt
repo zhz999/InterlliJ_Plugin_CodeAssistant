@@ -1,4 +1,4 @@
-package com.zhz.bytedance.development_assistant_zhz
+package icons
 
 import com.intellij.openapi.util.IconLoader
 

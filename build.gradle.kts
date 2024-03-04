@@ -1,11 +1,15 @@
-import java.util.*
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.jetbrains.changelog.Changelog
+import org.jetbrains.changelog.markdownToHTML
 import java.io.FileInputStream
+import java.util.*
 
 plugins {
     id("java")
     id("org.jetbrains.kotlin.jvm") version "1.8.22"
     id("org.jetbrains.intellij") version "1.14.1"
     id("io.ktor.plugin") version "2.3.4"
+    id("org.jetbrains.changelog") version "2.2.0"
 }
 
 //val env = environment("env").getOrNull()
@@ -33,10 +37,11 @@ dependencies {
     implementation("io.ktor:ktor-client-websockets:2.3.8")
     implementation("javax.websocket:javax.websocket-api:1.1")
     implementation("org.glassfish.tyrus.bundles:tyrus-standalone-client:1.9")
+    implementation("org.apache.commons:commons-text:1.11.0")
 }
 
 group = "com.zhz.bytedance.development_assistant_zhz"
-version = "1.0.0"
+version = "1.0.2"
 
 application {
     mainClass.set("$group.$name.ApplicationKt")
@@ -47,7 +52,7 @@ repositories {
 }
 
 intellij {
-    version.set("2023.1")
+    version.set("2023.2")
     type.set("IC")
     pluginName.set("CodeAssistant")
     plugins.set(listOf("java"))
@@ -64,7 +69,7 @@ tasks {
     }
 
     patchPluginXml {
-        sinceBuild.set("213")
+        sinceBuild.set("232")
         untilBuild.set("")
     }
 

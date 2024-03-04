@@ -15,6 +15,8 @@ import java.net.URL
 import javax.swing.*
 
 
+
+
 class CodeAssistantSettingsComponent {
     private var myMainPanel: JPanel? = null
     private val myUserNameText = JBTextField()
@@ -24,13 +26,12 @@ class CodeAssistantSettingsComponent {
     private val submitButton = JButton("Test Connection")
 
     fun getPanel(): JPanel? {
-
         val settings: CodeAssistantSettingsState = CodeAssistantSettingsState.getInstance()
         myMainPanel = FormBuilder.createFormBuilder()
             .addLabeledComponent(JBLabel("Ollama settings: "),JSeparator(),1, false)
             .addLabeledComponent(JBLabel("Enter your name: "), myUserNameText, 1, false)
-            .addLabeledComponent(JBLabel("Enter Ollama url: "), uri, 1, false)
-            .addLabeledComponent(JBLabel("Enter Ollama model: "), model, 1, false)
+            .addLabeledComponent(JBLabel("Enter ollama uri: "), uri, 1, false)
+            .addLabeledComponent(JBLabel("Enter ollama model: "), model, 1, false)
             .addComponent(myIdeaUserStatus, 1)
             .addComponentToRightColumn(submitButton,1)
             .addComponentFillVertically(JPanel(), 0)

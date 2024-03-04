@@ -23,11 +23,9 @@ import javax.swing.text.Style
 import javax.swing.text.StyleConstants
 import javax.swing.text.html.HTMLEditorKit
 
-
-class EditAction : ToolWindowFactory {
+class ChatWindow : ToolWindowFactory {
 
     private val settings: CodeAssistantSettingsState = CodeAssistantSettingsState.getInstance()
-
 
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
         try {
@@ -56,6 +54,7 @@ class EditAction : ToolWindowFactory {
 
         // 问题
         val issuePane = JTextPane()
+        issuePane.name = "issue"
         issuePane.contentType = "text/html"
         issuePane.editorKit = HTMLEditorKit()
         issuePane.isEditable = false
@@ -73,6 +72,7 @@ class EditAction : ToolWindowFactory {
         // 解释
         val textPane = JTextPane()
         val textPanePreferredSize = Dimension(width, (height * 0.8).toInt())
+        textPane.name = "out"
         textPane.contentType = "text/html"
         textPane.editorKit = HTMLEditorKit()
         textPane.isEditable = false
@@ -114,6 +114,8 @@ class EditAction : ToolWindowFactory {
         ll.addElement("gemma:7b")
         val modelList = JComboBox(ll)
         modelList.selectedItem = settings.model
+        modelList.setBackground(ColorUtil.fromHex("#ff000000"))
+        modelList.setBorder(BorderFactory.createEmptyBorder())
         toolPanel.add(modelList, BorderLayout.EAST)
         modelList.addActionListener {
             settings.model =  modelList.getItemAt(modelList.getSelectedIndex())
@@ -153,8 +155,7 @@ class EditAction : ToolWindowFactory {
         return panel
     }
 
-
-    private fun submit(
+    fun submit(
         textPane: JTextPane,
         inputText: String,
         panel: JPanel,
@@ -168,6 +169,7 @@ class EditAction : ToolWindowFactory {
         StyleConstants.setFontSize(style, 10);
         val settings: CodeAssistantSettingsState = CodeAssistantSettingsState.getInstance()
         val postData = "{\"model\": \"${settings.model}\",\"messages\": [{\"role\": \"user\",\"content\": \"${inputText}\"}]}"
+        println(postData)
         val worker = object : SwingWorker<Void, String>() {
             override fun doInBackground(): Void? {
                 try {
@@ -240,5 +242,4 @@ class EditAction : ToolWindowFactory {
     }
 }
 
-data class Person(val label: String,val value : String)
 
