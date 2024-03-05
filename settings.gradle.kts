@@ -5,4 +5,4 @@ pluginManagement {
     }
 }
 
-rootProject.name = "Development_Assistant_ZHZ"
+rootProject.name = "CodeAssistant"

@@ -1,47 +1,27 @@
-import org.gradle.api.tasks.testing.logging.TestExceptionFormat
-import org.jetbrains.changelog.Changelog
-import org.jetbrains.changelog.markdownToHTML
 import java.io.FileInputStream
 import java.util.*
 
 plugins {
     id("java")
     id("org.jetbrains.kotlin.jvm") version "1.8.22"
-    id("org.jetbrains.intellij") version "1.14.1"
+    id("org.jetbrains.intellij") version "1.17.2"
     id("io.ktor.plugin") version "2.3.4"
-    id("org.jetbrains.changelog") version "2.2.0"
 }
 
-//val env = environment("env").getOrNull()
 
 fun loadProperties(filename: String): Properties = Properties().apply {
     load(FileInputStream(filename))
 }
 
-//fun properties(key: String): Provider<String> {
-//    if ("win-arm64" == env) {
-//        val property = loadProperties("gradle-win-arm64.properties").getProperty(key)
-//            ?: return providers.gradleProperty(key)
-//        return providers.provider { property }
-//    }
-//    return providers.gradleProperty(key)
-//}
-//
-//fun environment(key: String) = providers.environmentVariable(key)
-
-
 dependencies {
     implementation("org.json:json:20231013")
-    implementation("io.ktor:ktor-client-cio:2.3.8")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0")
-    implementation("io.ktor:ktor-client-websockets:2.3.8")
     implementation("javax.websocket:javax.websocket-api:1.1")
-    implementation("org.glassfish.tyrus.bundles:tyrus-standalone-client:1.9")
-    implementation("org.apache.commons:commons-text:1.11.0")
+    implementation("org.java-websocket:Java-WebSocket:1.5.5")
+    implementation("org.json:json:20231013")
 }
 
-group = "com.zhz.bytedance.development_assistant_zhz"
-version = "1.0.2"
+group = "com.zhz.code_assistant"
+version = "1.0.5"
 
 application {
     mainClass.set("$group.$name.ApplicationKt")
@@ -59,13 +39,24 @@ intellij {
 }
 
 tasks {
-    // Set the JVM compatibility versions
     withType<JavaCompile> {
         sourceCompatibility = "17"
         targetCompatibility = "17"
     }
     withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
         kotlinOptions.jvmTarget = "17"
+    }
+
+    withType<Jar>{
+        manifest {
+            attributes["Main-Class"] = "com.example.MainKt"
+        }
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+        from(sourceSets.main.get().output)
+        dependsOn(configurations.runtimeClasspath)
+        from({
+            configurations.runtimeClasspath.get().filter { it.name.endsWith("jar") }.map { zipTree(it) }
+        })
     }
 
     patchPluginXml {

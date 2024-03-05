@@ -1,4 +1,4 @@
-package com.zhz.bytedance.development_assistant_zhz;
+package code_assistant.common;
 
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer;
 import com.intellij.openapi.application.ApplicationManager;

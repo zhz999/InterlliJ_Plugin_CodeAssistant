@@ -1,9 +1,9 @@
-package statusbar;
+package code_assistant.statusbar
 
-import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.Disposer;
-import com.intellij.openapi.wm.StatusBarWidget;
-import com.intellij.openapi.wm.impl.status.widget.StatusBarEditorBasedWidgetFactory;
+import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.Disposer
+import com.intellij.openapi.wm.StatusBarWidget
+import com.intellij.openapi.wm.impl.status.widget.StatusBarEditorBasedWidgetFactory
 
 class CodeStatusBarWidgetFactory : StatusBarEditorBasedWidgetFactory() {
 
@@ -16,10 +16,10 @@ class CodeStatusBarWidgetFactory : StatusBarEditorBasedWidgetFactory() {
   }
 
   override fun createWidget(project: Project): StatusBarWidget {
-    return  CodeStatusBarWidget(project);
+    return CodeStatusBarWidget(project);
   }
 
   override fun disposeWidget(widget: StatusBarWidget) {
-    Disposer.dispose(widget);
+      Disposer.dispose(widget);
   }
 }

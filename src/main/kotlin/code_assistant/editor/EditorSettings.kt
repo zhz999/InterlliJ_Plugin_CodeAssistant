@@ -1,20 +1,23 @@
-package editor
+package code_assistant.editor
 
 import com.intellij.openapi.actionSystem.*
 import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.IconLoader
 import com.intellij.openapi.wm.ToolWindowManager
-import settings.CodeAssistantSettingsConfigurable
+import code_assistant.settings.CodeAssistantSettingsConfigurable
 import javax.swing.Icon
 
+/**
+ * 注册 Editor 工具栏
+ */
 class EditorPopupMenu1 : ActionGroup() {
     override fun getChildren(e: AnActionEvent?): Array<AnAction> {
         EditorActionsUtil.refreshActions()
         // 创建子菜单项
         return arrayOf(
-            MyAction("Open Assistant","Open Chat",IconLoader.getIcon("/icons/codegpt-small.svg", javaClass)),
-            MyAction("Open Settings","Open Settings",IconLoader.getIcon("/icons/codegpt-small.svg", javaClass)),
+            MyAction("Open Assistant","Open Assistant",IconLoader.getIcon("/icons/app-icon-light.svg", javaClass)),
+            MyAction("Open Settings","Open Settings",IconLoader.getIcon("/icons/app-icon-light.svg", javaClass)),
             Separator.getInstance(),
         )
     }

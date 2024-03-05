@@ -1,6 +1,6 @@
-package settings.configuration
+package code_assistant.settings.configuration
 
-import editor.EditorActionsUtil
+import code_assistant.editor.EditorActionsUtil
 import java.util.*
 
 class ConfigurationState {
@@ -27,7 +27,8 @@ class ConfigurationState {
     }
 
     override fun hashCode(): Int {
-        return Objects.hash(tableData
+        return Objects.hash(
+            tableData
         )
     }
 

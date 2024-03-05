@@ -1,4 +1,3 @@
-<!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin>
     <id>CodeAssistant</id>
     <name>开发助手</name>
@@ -10,7 +9,7 @@
           <ul>
             <li>1. Download the Plugin</li>
             <li>2. Configuration ollama</li>
-            <li>3. use CodeAssistant</li>
+            <li>3. use code_assistant</li>
           </ul>
         ]]>
     </description>
@@ -22,71 +21,69 @@
           </ul>
         ]]>
     </change-notes>
-    <!-- Extension points defined by the plugin.
-         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
-
         <toolWindow id="开发助手"
-                    icon="Icons.DefaultSmall"
+                    icon="code_assistant.common.Icons.DefaultSmall"
                     anchor="right"
                     secondary="true"
-                    factoryClass="com.zhz.bytedance.development_assistant_zhz.ChatWindow"/>
+                    factoryClass="code_assistant.window.ChatWindow"/>
 
         <statusBarWidgetFactory
                 order="first"
                 id="dev.statusbar.widget"
-                implementation="statusbar.CodeStatusBarWidgetFactory"/>
+                implementation="code_assistant.statusbar.CodeStatusBarWidgetFactory"/>
 
         <applicationConfigurable
-                id="settings.CodeAssistant"
+                id="settings.code_assistant"
                 parentId="tools"
-                instance="settings.CodeAssistantSettingsConfigurable"
+                instance="code_assistant.settings.CodeAssistantSettingsConfigurable"
                 displayName="开发助手"/>
-        <applicationService serviceImplementation="settings.CodeAssistantSettingsState"/>
+        <applicationService serviceImplementation="code_assistant.settings.CodeAssistantSettingsState"/>
 
         <applicationConfigurable
                 id="settings.Configuration"
-                parentId="settings.CodeAssistant"
+                parentId="settings.code_assistant"
                 displayName="Editor Configuration"
-                instance="settings.configuration.ConfigurationConfigurable"/>
-        <applicationService serviceImplementation="settings.configuration.ConfigurationSettings"/>
+                instance="code_assistant.settings.configuration.ConfigurationConfigurable"/>
+        <applicationService serviceImplementation="code_assistant.settings.configuration.ConfigurationSettings"/>
 
     </extensions>
     <actions>
-<!--        <action id="DevAction"-->
-<!--                class="com.zhz.bytedance.development_assistant_zhz.DevAction"-->
+
+<!--        <action id="ApplicationWindow"-->
+<!--                class="code_assistant.tool.ApplicationWindow"-->
 <!--                text="Open Assistant"-->
 <!--                popup="true"-->
-<!--                icon="Icons.DefaultSmall">-->
+<!--                icon="code_assistant.common.Icons.DefaultSmall">-->
 <!--            <add-to-group group-id="EditorPopupMenu1" anchor="first"/>-->
 <!--        </action>-->
 
         <action id="Png-icons"
-                class="com.zhz.bytedance.development_assistant_zhz.PngToIcon"
+                class="code_assistant.common.PngToIcon"
                 popup="true"
-                icon="Icons.DefaultSmall"
+                icon="code_assistant.common.Icons.DefaultSmall"
                 text="Png 转 Icons">
             <add-to-group group-id="ToolsMenu" anchor="first"/>
         </action>
 
         <action
-                id="DevAction.openSettings"
-                icon="Icons.DefaultSmall"
+                id="StatusBar.openSettings"
+                icon="code_assistant.common.Icons.DefaultSmall"
                 text="Open Settings"
-                class="settings.OpenSettingsAction">
+                class="code_assistant.settings.OpenSettingsAction">
             <override-text place="MainMenu" text="Open Settings"/>
             <override-text place="popup" use-text-of-place="MainMenu"/>
         </action>
 
-        <group id="DevAction.statusBarPopup">
-            <reference id="DevAction.openSettings"/>
+        <group id="StatusBar.statusBarPopup">
+            <reference id="StatusBar.openSettings"/>
         </group>
 
-        <group id="editor.EditorPopupMenu1"
-               class="editor.EditorPopupMenu1"
+        <group id="code_assistant.editor.EditorPopupMenu1"
+               class="code_assistant.editor.EditorPopupMenu1"
                text="Quick Action"
                description="Quick action"
-               icon="Icons.DefaultSmall"
+               icon="code_assistant.common.Icons.DefaultSmall"
         >
             <add-to-group group-id="EditorPopupMenu1" anchor="first"/>
         </group>
@@ -96,7 +93,7 @@
                    text="Code Assistant"
                    class="com.intellij.openapi.actionSystem.DefaultActionGroup"
                    popup="true"
-                   icon="icons.Icons.DefaultSmall">
+                   icon="code_assistant.common.Icons.DefaultSmall">
             </group>
             <add-to-group group-id="EditorPopupMenu1" anchor="first"/>
         </group>
