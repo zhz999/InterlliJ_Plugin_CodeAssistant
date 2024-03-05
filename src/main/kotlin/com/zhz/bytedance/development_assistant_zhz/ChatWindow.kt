@@ -168,8 +168,17 @@ class ChatWindow : ToolWindowFactory {
         val style: Style = doc.addStyle("default", null)
         StyleConstants.setFontSize(style, 10);
         val settings: CodeAssistantSettingsState = CodeAssistantSettingsState.getInstance()
-        val postData = "{\"model\": \"${settings.model}\",\"messages\": [{\"role\": \"user\",\"content\": \"${inputText}\"}]}"
+//        val postData = "{\"model\": \"${settings.model}\",\"messages\": [{\"role\": \"user\",\"content\": \"`${inputText}`\"}]}"
+
+        val messagesObject = JsonObject()
+        messagesObject.addProperty("role","user")
+        messagesObject.addProperty("content","```$inputText```")
+        val postData = JsonObject()
+        postData.addProperty("model", settings.model)
+        postData.add("messages", Gson().toJsonTree(arrayOf(messagesObject)).asJsonArray)
+
         println(postData)
+
         val worker = object : SwingWorker<Void, String>() {
             override fun doInBackground(): Void? {
                 try {
@@ -181,7 +190,7 @@ class ChatWindow : ToolWindowFactory {
 
                     // 发送POST数据
                     val outputStream = connection.outputStream
-                    outputStream.write(postData.toByteArray())
+                    outputStream.write(Gson().toJson(postData).toByteArray())
                     outputStream.flush()
                     outputStream.close()
 
