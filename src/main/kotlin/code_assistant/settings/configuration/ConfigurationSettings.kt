@@ -1,9 +1,9 @@
-package settings.configuration
+package code_assistant.settings.configuration
 
-import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.components.PersistentStateComponent;
-import com.intellij.openapi.components.State;
-import com.intellij.openapi.components.Storage;
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.components.PersistentStateComponent
+import com.intellij.openapi.components.State
+import com.intellij.openapi.components.Storage
 
 @State(name = "CodeAssist_ConfigurationSettings", storages = [Storage("CodeAssist_ConfigurationSettings.xml")])
 final class ConfigurationSettings : PersistentStateComponent<ConfigurationState> {
@@ -18,8 +18,8 @@ final class ConfigurationSettings : PersistentStateComponent<ConfigurationState>
 
     companion object {
 
-        fun getCurrentState():ConfigurationState{
-           return getInstance().getState()
+        fun getCurrentState(): ConfigurationState {
+            return getInstance().getState()
         }
 
         fun getInstance(): ConfigurationSettings {

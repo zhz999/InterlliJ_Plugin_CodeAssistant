@@ -1,27 +1,30 @@
-package settings.configuration
+package code_assistant.settings.configuration
 
-import com.intellij.openapi.Disposable
 import com.intellij.ui.ToolbarDecorator
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.table.JBTable
 import com.intellij.util.ui.FormBuilder
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.UI
-import editor.EditorActionsUtil
+import code_assistant.editor.EditorActionsUtil
 import java.awt.Dimension
-import java.util.*
+import java.util.LinkedHashMap
 import javax.swing.BorderFactory
 import javax.swing.JComponent
 import javax.swing.JPanel
 import javax.swing.table.DefaultTableModel
 
-
-class ConfigurationComponent(parentDisposable: Disposable, configuration: ConfigurationState) {
+class ConfigurationComponent(configuration: ConfigurationState) {
     val panel: JPanel
     private val table: JBTable
 
     init {
-        table = JBTable(DefaultTableModel(EditorActionsUtil.toArray(configuration.getTableData()), arrayOf<String>("Action","Prompt")))
+        table = JBTable(
+            DefaultTableModel(
+                EditorActionsUtil.toArray(configuration.getTableData()),
+                arrayOf("Action", "Prompt")
+            )
+        )
         table.columnModel.getColumn(0).setPreferredWidth(60)
         table.columnModel.getColumn(1).setPreferredWidth(240)
         table.emptyText.setText("No actions configured")
@@ -30,7 +33,6 @@ class ConfigurationComponent(parentDisposable: Disposable, configuration: Config
         panel = FormBuilder.createFormBuilder()
             .addComponent(tablePanel)
             .addVerticalGap(4)
-            // .addComponent(TitledSeparator("带标题的水平分割线"))
             .addComponentFillVertically(JPanel(), 0)
             .panel
     }
@@ -68,57 +70,15 @@ class ConfigurationComponent(parentDisposable: Disposable, configuration: Config
 
     private fun createTablePanel(): JPanel {
         return ToolbarDecorator.createDecorator(table)
-            .setPreferredSize(Dimension(table.getPreferredSize().width, 140))
-            .setAddAction {
-                model.addRow(
-                    arrayOf<Any>(
-                        "",
-                        ""
-                    )
-                )
-            }
+            .setPreferredSize(Dimension(table.getPreferredSize().width, 300))
+            .setAddAction { model.addRow(arrayOf<Any>("", "")) }
             .setRemoveAction { model.removeRow(table.selectedRow) }
             .disableUpAction()
             .disableDownAction()
             .createPanel()
     }
 
-    private fun addAssistantFormLabeledComponent(
-        formBuilder: FormBuilder,
-        labelKey: String,
-        commentKey: String,
-        component: JComponent
-    ) {
-        formBuilder.addLabeledComponent(
-            JBLabel(labelKey)
-                .withBorder(JBUI.Borders.emptyLeft(2)),
-            UI.PanelFactory.panel(component)
-                .resizeX(false)
-                .withComment(commentKey)
-                .withCommentHyperlinkListener(EditorActionsUtil::handleHyperlinkClicked)
-                .createPanel(),
-            true
-        )
-    }
-
-    private fun createAssistantConfigurationForm(): JPanel {
-        val formBuilder = FormBuilder.createFormBuilder()
-        formBuilder.addVerticalGap(8)
-        addAssistantFormLabeledComponent(
-            formBuilder,
-            "Editor Actions",
-            "你可以自定义 Action",
-            table
-        )
-        val form = formBuilder.panel
-        form.setBorder(JBUI.Borders.emptyLeft(16))
-        return form
-    }
-
     private val model: DefaultTableModel
         get() = table.model as DefaultTableModel
 
 }
-
-
-

@@ -1,4 +1,4 @@
-package editor
+package code_assistant.editor
 
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
@@ -8,7 +8,9 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.NlsActions
 import javax.swing.Icon
 
-
+/**
+ * 注册 Editor 右键 Action
+ */
 internal abstract class BaseEditorAction @JvmOverloads constructor(
     text: @NlsActions.ActionText String?,
     description: @NlsActions.ActionDescription String?,

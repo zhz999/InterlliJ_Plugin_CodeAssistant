@@ -1,11 +1,10 @@
-package settings.configuration
+package code_assistant.settings.configuration
 
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.util.Disposer
 import org.jetbrains.annotations.Nls
 import javax.swing.JComponent
-
 
 class ConfigurationConfigurable : Configurable {
     private var parentDisposable: Disposable? = null
@@ -19,7 +18,6 @@ class ConfigurationConfigurable : Configurable {
     override fun createComponent(): JComponent? {
         parentDisposable = Disposer.newDisposable()
         component = ConfigurationComponent(
-            parentDisposable!!,
             ConfigurationSettings.getCurrentState()
         )
         return component!!.panel
@@ -44,4 +42,3 @@ class ConfigurationConfigurable : Configurable {
         component = null
     }
 }
-

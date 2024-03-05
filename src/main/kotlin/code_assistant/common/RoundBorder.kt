@@ -1,4 +1,4 @@
-package com.zhz.bytedance.development_assistant_zhz
+package code_assistant.common
 
 import com.intellij.ui.JBColor
 import com.intellij.util.ui.JBUI
@@ -9,7 +9,9 @@ import java.awt.Insets
 import java.awt.geom.RoundRectangle2D
 import javax.swing.border.Border
 
-
+/**
+ *  创建圆角边框
+ */
  class RoundBorder(private val radius: Int) : Border {
 
     override fun paintBorder(c: Component?, g: Graphics, x: Int, y: Int, width: Int, height: Int) {
