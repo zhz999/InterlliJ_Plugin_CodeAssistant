@@ -176,9 +176,7 @@ class ChatWindow : ToolWindowFactory {
             })
             WsState.wsClient =
                 connectWs(
-                    issuePane,
                     textPane,
-                    panel,
                     submitButton,
                     buttonPanel,
                     jTextField,
@@ -304,11 +302,13 @@ Service Is Ready...
                 doc.insertString(doc.length, "\n\n\n\n\n", style);
             }
             val htmlKit = HTMLEditorKit()
+            val styleSheet = htmlKit.styleSheet
+            styleSheet.addRule("code { font-family: monospace; }")
             try {
                 val htmlContent = """
                 <html>
                     <body>
-                        <div style="border:'1px solid #dee0e3';border-radius:'10px';padding:'8px';background:'#dee0e3';">${jTextField.text}</div>
+                        <div style="border:'1px solid #dee0e3';border-radius:'10px';padding:'8px';background:'#dee0e3';"><code>${message}</code></div>
                         <br>
                     </body>
                 </html>
@@ -333,9 +333,7 @@ Service Is Ready...
 
 
     private fun connectWs(
-        isReadyTxt: JTextPane,
         textPane: JTextPane,
-        panel: JPanel,
         submitButton: JButton,
         buttonPanel: JPanel,
         jTextField: JTextField,
