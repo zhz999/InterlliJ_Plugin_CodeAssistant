@@ -2,6 +2,9 @@ package code_assistant.settings
 
 import com.intellij.openapi.application.Application
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.ModalityState
+import com.intellij.openapi.ui.ComboBox
+import com.intellij.openapi.wm.WindowManager
 import com.intellij.ui.TitledSeparator
 import com.intellij.ui.components.JBCheckBox
 import com.intellij.ui.components.JBLabel
@@ -18,32 +21,26 @@ import java.net.URI
 import java.net.URL
 import javax.swing.*
 
+
 class CodeAssistantSettingsComponent {
     private lateinit var myMainPanel: JPanel
     private val myUserNameText = JBTextField()
     private val model = JBTextField()
     private val uri = JBTextField()
     private var dorado = JBTextArea("", 5, 80)
-    private var enabledDorado = JBCheckBox("启用字节 Dorado ?")
+    private var enabled = JBCheckBox("启用字节 Dorado ?")
     private val submitButton = JButton("Test Connection")
     private val socketButton = JButton("Test Connection")
+    val restartButton = JButton("Restart IDEA")
+    private val gpt = ComboBox(arrayOf("Ollama", "Dorado"))
 
     fun getPanel(): JPanel {
         val settings: CodeAssistantSettingsState = CodeAssistantSettingsState.getInstance()
-        dorado.setBorder(JBUI.Borders.empty(10,8))
+        restartButton.isVisible = false
+        dorado.setBorder(JBUI.Borders.empty(10, 8))
         dorado.lineWrap = true
         dorado.wrapStyleWord = false
-
-        // 监听变化重启编辑器
-        enabledDorado.addActionListener() {
-            if (enabledDorado.isSelected) {
-                JOptionPane.showMessageDialog(myMainPanel, "重启后生效")
-                val application: Application = ApplicationManager.getApplication()
-                application.restart()
-            }
-        }
-
-
+        // Dorado 面板
         val panel = panel {
             row {
                 cell(
@@ -52,28 +49,53 @@ class CodeAssistantSettingsComponent {
             }
             row { comment("这里使用的是 https://data.bytedance.net/dorado 的 Token") }
         }
-
+        // 设置面板
         myMainPanel = FormBuilder.createFormBuilder()
-            // Ollama settings
-            // .addLabeledComponent(JBLabel("Ollama settings: "), JSeparator(),1, false)
-            .addComponent(TitledSeparator("Ollama settings"))
+            // Ollama Settings
+            .addComponent(TitledSeparator("Ollama Settings"))
             .addLabeledComponent(JBLabel("Enter your name: "), myUserNameText, 1, false)
             .addLabeledComponent(JBLabel("Enter ollama uri: "), uri, 1, false)
             .addLabeledComponent(JBLabel("Enter ollama model: "), model, 1, false)
             .addComponent(submitButton, 1)
-            // Dorado settings
+            // Dorado Settings
             .addVerticalGap(6)
-            .addComponent(TitledSeparator("Dorado settings"))
+            .addComponent(TitledSeparator("Dorado Settings"))
             .addLabeledComponent(
                 "",
                 panel,
                 1,
                 true
             )
-            .addLabeledComponent(socketButton, enabledDorado, 3, false)
+            .addLabeledComponent(socketButton, enabled, 3, false)
+            // Editor Action Settings
+            .addVerticalGap(6)
+            .addComponent(TitledSeparator("Editor Action Settings"))
+            .addLabeledComponent(JBLabel("Select editor action channel: "), gpt, 1, false)
+
+            .addVerticalGap(6)
+            .addComponent(restartButton,2)
 
             .addComponentFillVertically(JPanel(), 0)
             .panel
+
+        restartButton.addActionListener{
+            val application: Application = ApplicationManager.getApplication()
+            val windowManager = WindowManager.getInstance()
+            for (win in windowManager.allProjectFrames){
+                println(win.project?.name)
+                println(win.component?.name)
+            }
+            val flag = JOptionPane.showConfirmDialog(
+                myMainPanel,
+                "配置变更，是否需求重启后生效？",
+                "IDEA 重启消息", JOptionPane.YES_NO_OPTION
+            )
+            //
+            if (flag == 0) {
+                application.invokeLater( { application.restart()}, ModalityState.nonModal())
+            }
+        }
+
 
         // 按钮事件
         socketButton.addActionListener {
@@ -87,9 +109,7 @@ class CodeAssistantSettingsComponent {
                     socketButton.setEnabled(true);
                 }
 
-                override fun onMessage(message: String?) {
-
-                }
+                override fun onMessage(message: String?) {}
 
                 override fun onClose(code: Int, reason: String?, remote: Boolean) {
                     close()
@@ -143,13 +163,10 @@ class CodeAssistantSettingsComponent {
                     return null
                 }
 
-                override fun process(chunks: MutableList<String>?) {
-
-                }
+                override fun process(chunks: MutableList<String>?) {}
             }
             worker.execute()
         }
-
         return myMainPanel
     }
 
@@ -193,13 +210,21 @@ class CodeAssistantSettingsComponent {
         dorado.text = newText
     }
 
-
-    fun getEnabledDorado(): Boolean {
-        return enabledDorado.isSelected
+    fun getEnabled(): Boolean {
+        return enabled.isSelected
     }
 
-    fun setEnabledDorado(flag: Boolean) {
-        enabledDorado.isSelected = flag
+    fun setEnabled(flag: Boolean) {
+        enabled.isSelected = flag
+    }
+
+    fun getGpt(): String {
+        return gpt.selectedItem as String
+    }
+
+    fun setGpt(selectedItem: String) {
+        gpt.selectedItem = selectedItem
     }
 
 }
+

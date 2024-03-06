@@ -1,17 +1,12 @@
 package code_assistant.settings.configuration
 
 import com.intellij.ui.ToolbarDecorator
-import com.intellij.ui.components.JBLabel
 import com.intellij.ui.table.JBTable
 import com.intellij.util.ui.FormBuilder
-import com.intellij.util.ui.JBUI
-import com.intellij.util.ui.UI
 import code_assistant.editor.EditorActionsUtil
 import java.awt.Dimension
 import java.util.LinkedHashMap
-import javax.swing.BorderFactory
-import javax.swing.JComponent
-import javax.swing.JPanel
+import javax.swing.*
 import javax.swing.table.DefaultTableModel
 
 class ConfigurationComponent(configuration: ConfigurationState) {
@@ -19,6 +14,7 @@ class ConfigurationComponent(configuration: ConfigurationState) {
     private val table: JBTable
 
     init {
+
         table = JBTable(
             DefaultTableModel(
                 EditorActionsUtil.toArray(configuration.getTableData()),
@@ -80,5 +76,6 @@ class ConfigurationComponent(configuration: ConfigurationState) {
 
     private val model: DefaultTableModel
         get() = table.model as DefaultTableModel
+
 
 }

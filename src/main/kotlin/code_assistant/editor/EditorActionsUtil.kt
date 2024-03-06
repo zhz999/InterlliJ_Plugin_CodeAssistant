@@ -1,5 +1,6 @@
 package code_assistant.editor
 
+import code_assistant.settings.CodeAssistantSettingsState
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.DefaultActionGroup
@@ -28,6 +29,8 @@ class EditorActionsUtil {
             if (actionGroup is DefaultActionGroup) {
                 actionGroup.removeAll()
                 actionGroup.addSeparator()
+
+                val userGpt = CodeAssistantSettingsState.getInstance().gpt
                 val configuredActions: Map<String, String> = ConfigurationSettings.getCurrentState().getTableData()
                 configuredActions.forEach { (label, prompt) ->
                     val action: BaseEditorAction = object : BaseEditorAction(label, label) {
@@ -40,7 +43,7 @@ class EditorActionsUtil {
                                 val toolWindow = toolWindowManager.getToolWindow("开发助手")
                                 if (toolWindow !== null) {
                                     toolWindow.show()
-                                    val chatToolWindow = toolWindow.contentManager.findContent("Chat")
+                                    val chatToolWindow = toolWindow.contentManager.findContent("Chat-2")
                                     val panel = chatToolWindow.component
                                     if (panel is JPanel) {
                                         println("Find panel OK!")
@@ -92,14 +95,27 @@ class EditorActionsUtil {
                                                                 submitBtn.icon =
                                                                     IconLoader.getIcon("/icons/dis-send.svg", javaClass)
 
-                                                                ChatWindow().submit(
-                                                                    outPane,
-                                                                    message,
-                                                                    panel,
-                                                                    submitBtn,
-                                                                    buttonPanel,
-                                                                    jTextField
-                                                                )
+                                                                println("userGpt: $userGpt")
+                                                                // 发送
+                                                                if (userGpt == "Dorado") {
+                                                                    ChatWindow.send(
+                                                                        panel,
+                                                                        buttonPanel,
+                                                                        jTextField,
+                                                                        message,
+                                                                        outPane
+                                                                    )
+                                                                } else {
+                                                                    ChatWindow().submit(
+                                                                        outPane,
+                                                                        message,
+                                                                        panel,
+                                                                        submitBtn,
+                                                                        buttonPanel,
+                                                                        jTextField
+                                                                    )
+                                                                }
+
                                                             }
                                                         }
                                                     }

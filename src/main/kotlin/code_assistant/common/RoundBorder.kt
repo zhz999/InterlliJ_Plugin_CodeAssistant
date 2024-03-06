@@ -2,10 +2,7 @@ package code_assistant.common
 
 import com.intellij.ui.JBColor
 import com.intellij.util.ui.JBUI
-import java.awt.Component
-import java.awt.Graphics
-import java.awt.Graphics2D
-import java.awt.Insets
+import java.awt.*
 import java.awt.geom.RoundRectangle2D
 import javax.swing.border.Border
 
@@ -16,7 +13,7 @@ import javax.swing.border.Border
 
     override fun paintBorder(c: Component?, g: Graphics, x: Int, y: Int, width: Int, height: Int) {
         val g2d = g.create() as Graphics2D
-        g2d.color= JBColor.BLUE
+        g2d.color= Color.decode("#dee0e3")
         g2d.draw(
             RoundRectangle2D.Double(
                 x.toDouble(),

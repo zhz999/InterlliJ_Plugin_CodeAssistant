@@ -23,12 +23,12 @@ class ConfigurationState {
             return false
         }
         val that = other as ConfigurationState
-        return tableData == that.tableData
+        return tableData == that.tableData // && useGPT == that.useGPT
     }
 
     override fun hashCode(): Int {
         return Objects.hash(
-            tableData
+            tableData // , useGPT
         )
     }
 
