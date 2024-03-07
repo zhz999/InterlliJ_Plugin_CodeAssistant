@@ -43,7 +43,7 @@ class EditorActionsUtil {
                                 val toolWindow = toolWindowManager.getToolWindow("开发助手")
                                 if (toolWindow !== null) {
                                     toolWindow.show()
-                                    val chatToolWindow = toolWindow.contentManager.findContent("Chat-2")
+                                    val chatToolWindow = toolWindow.contentManager.findContent("Copilot")
                                     val panel = chatToolWindow.component
                                     if (panel is JPanel) {
                                         println("Find panel OK!")

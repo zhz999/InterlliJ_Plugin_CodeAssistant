@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="16px" height="16px" viewBox="0 0 16 16" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>logo_dorado_30*30</title>
+    <defs>
+        <linearGradient x1="40.8590319%" y1="76.2665286%" x2="50%" y2="0%" id="linearGradient-1">
+            <stop stop-color="#dee0e3" offset="0%"></stop>
+            <stop stop-color="#dee0e3" offset="100%"></stop>
+        </linearGradient>
+    </defs>
+    <g id="页面-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="IDE-顶导-全部产品常规展示" transform="translate(-269.000000, -174.000000)" fill-rule="nonzero">
+            <g id="编组-7" transform="translate(257.000000, 161.000000)">
+                <g id="编组-9备份" transform="translate(12.000000, 13.000000)">
+                    <g id="编组" transform="translate(0.000000, 2.666667)">
+                        <polygon id="路径" fill="#dee0e3" transform="translate(12.560274, 5.331029) scale(-1, 1) translate(-12.560274, -5.331029) " points="14.1377743 0.00567626955 15.7117743 1.77117627 12.5457816 5.32917627 15.7117743 8.8908808 14.1377743 10.6563808 9.40877435 5.32917627"></polygon>
+                        <polygon id="路径" fill="#dee0e3" points="9.78472235 4.97416946 4.729 10.6507045 3.1555 8.88420453 8.19176245 3.22991933"></polygon>
+                        <polygon id="路径" fill="#dee0e3" opacity="0.8" points="4.729 2.84217094e-14 6.303 1.7655 3.13700726 5.3235 6.303 8.88520453 4.729 10.6507045 -1.32607309e-14 5.3235"></polygon>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

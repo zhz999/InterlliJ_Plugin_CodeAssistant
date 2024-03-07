@@ -1,10 +1,10 @@
 package code_assistant.window
 
-import code_assistant.common.RoundBorder
 import code_assistant.settings.CodeAssistantSettingsState
 import com.google.gson.Gson
 import com.google.gson.JsonObject
-import com.intellij.collaboration.ui.setHtmlBody
+import com.intellij.openapi.editor.EditorFactory
+import com.intellij.openapi.editor.EditorKind
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.openapi.ui.Messages
@@ -14,8 +14,11 @@ import com.intellij.openapi.wm.ToolWindowFactory
 import com.intellij.ui.ColorUtil
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBScrollPane
+import com.intellij.ui.content.Content
 import com.intellij.ui.content.ContentFactory
 import com.intellij.util.ui.JBUI
+import com.vladsch.flexmark.parser.Parser
+import com.vladsch.flexmark.util.ast.Document
 import org.java_websocket.client.WebSocketClient
 import org.java_websocket.handshake.ServerHandshake
 import org.json.JSONObject
@@ -49,6 +52,10 @@ class ChatWindow : ToolWindowFactory {
         @JvmStatic
         @Volatile
         var wsTimer: Timer? = null
+
+        @JvmStatic
+        @Volatile
+        var doradoContent: Content? = null
     }
 
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
@@ -58,12 +65,15 @@ class ChatWindow : ToolWindowFactory {
             val size = SwingUtilities.getRoot(component).size
             val width = size.width
             val height = size.height
-            val chatContent = contentFactory.createContent(createToolWindowPanel(width, height, "Chat"), "Chat", false)
+            val chatComponent = createToolWindowPanel(width, height, "Ollama", project)
+            val chatContent = contentFactory.createContent(chatComponent, "Ollama", false)
+            chatContent.icon = IconLoader.getIcon("/icons/ollama.svg", javaClass)
             toolWindow.contentManager.addContent(chatContent)
             if (settings.enabled) {
-                val wsPanel = createToolWindowPanel(width, height, "Chat-2")
-                val doradoContent = contentFactory.createContent(wsPanel, "Chat-2", false)
-                toolWindow.contentManager.addContent(doradoContent)
+                val wsComponent = createToolWindowPanel(width, height, "Copilot", project)
+                WsState.doradoContent = contentFactory.createContent(wsComponent, "Copilot", false)
+                WsState.doradoContent!!.icon = IconLoader.getIcon("/icons/off-dorado.svg", javaClass)
+                toolWindow.contentManager.addContent(WsState.doradoContent!!)
             }
         } catch (e: IOException) {
             Messages.showErrorDialog(project, e.stackTraceToString(), "打开插件失败")
@@ -71,7 +81,7 @@ class ChatWindow : ToolWindowFactory {
     }
 
 
-    private fun createToolWindowPanel(width: Int, height: Int, displayName: String): JPanel {
+    private fun createToolWindowPanel(width: Int, height: Int, displayName: String, project: Project): JPanel {
         val panel = JPanel(BorderLayout())
 
         // 问题
@@ -88,8 +98,8 @@ class ChatWindow : ToolWindowFactory {
         scrollIssuePanePane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         scrollIssuePanePane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
         scrollIssuePanePane.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.decode("#dee0e3")))
-        if (displayName == "Chat") {
-           // panel.add(scrollIssuePanePane, BorderLayout.NORTH)
+        if (displayName == "Ollama") {
+            // panel.add(scrollIssuePanePane, BorderLayout.NORTH)
         }
 
         // 解释
@@ -107,6 +117,17 @@ class ChatWindow : ToolWindowFactory {
         val scrollPane = JBScrollPane(textPane)
         scrollPane.isDoubleBuffered = true
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
+
+//        // 获取EditorFactory实例
+//        val editorFactory = EditorFactory.getInstance()
+//        // 创建一个Document对象，用于保存编辑器中的文本内容
+//        val document = editorFactory.createDocument("")
+//        // 创建编辑器
+//        val editor = editorFactory.createEditor(document)
+//        // 在Document中设置文本内容
+//        editor.document.setText("Hello, Kotlin!")
+//        scrollPane.add(editor.component)
+
         panel.add(scrollPane, BorderLayout.CENTER)
 
         // 输入
@@ -153,14 +174,14 @@ class ChatWindow : ToolWindowFactory {
         val downPanel = JPanel()
         downPanel.setLayout(BorderLayout())//上下布局
 
-        if (displayName == "Chat") {
+        if (displayName == "Ollama") {
             downPanel.add(toolPanel, BorderLayout.NORTH)//上
         }
 
         downPanel.add(buttonPanel, BorderLayout.SOUTH)//下
         panel.add(downPanel, BorderLayout.SOUTH)
 
-        if (displayName == "Chat-2") {
+        if (displayName == "Copilot") {
             WsState.wsTimer = Timer(500, ActionListener {
                 counts += 1
                 // 模拟加载过程
@@ -188,7 +209,7 @@ class ChatWindow : ToolWindowFactory {
         // 添加回车事件监听器
         jTextField.addActionListener { // 在这里处理回车事件的逻辑
             issuePane.text = jTextField.text
-            if (displayName == "Chat") {
+            if (displayName == "Ollama") {
                 submit(textPane, jTextField.text, panel, submitButton, buttonPanel, jTextField)
             } else {
                 // textPane.text = ""
@@ -200,7 +221,7 @@ class ChatWindow : ToolWindowFactory {
         // 按钮事件
         submitButton.addActionListener {
             issuePane.text = jTextField.text
-            if (displayName == "Chat") {
+            if (displayName == "Ollama") {
                 submit(textPane, jTextField.text, panel, submitButton, buttonPanel, jTextField)
             } else {
                 // textPane.text = ""
@@ -220,13 +241,6 @@ class ChatWindow : ToolWindowFactory {
         val doc = outPanel.styledDocument
         val style: Style = doc.addStyle("default", null)
         StyleConstants.setFontSize(style, 12);
-
-        println("`${doc.getText(0,doc.length)}`")
-        if("""
-Service Is Ready...
- """ != doc.getText(0,doc.length)){
-            doc.insertString(doc.length, "\n\n\n\n\n", style);
-        }
         val htmlKit = HTMLEditorKit()
         try {
             val htmlContent = """
@@ -294,13 +308,6 @@ Service Is Ready...
             val doc = outPanel.styledDocument
             val style: Style = doc.addStyle("default", null)
             StyleConstants.setFontSize(style, 12);
-
-            println("`${doc.getText(0,doc.length)}`")
-            if("""
-Service Is Ready...
- """ != doc.getText(0,doc.length)){
-                doc.insertString(doc.length, "\n\n\n\n\n", style);
-            }
             val htmlKit = HTMLEditorKit()
             val styleSheet = htmlKit.styleSheet
             styleSheet.addRule("code { font-family: monospace; }")
@@ -341,16 +348,11 @@ Service Is Ready...
         scrollPane: JBScrollPane
     ): WebSocketClient {
 
-        val htmlKit = HTMLEditorKit()
-
         val wsClient: WebSocketClient = object :
             WebSocketClient(URI("wss://data.bytedance.net/socket-dorado/copilot/v1/socket?token=" + settings.dorado)) {
             override fun onOpen(handshakedata: ServerHandshake?) {
                 println("WebSocketClient Connect Success")
-                val doc = textPane.styledDocument
-                val htmlContent =
-                    """<html><body><div id="out_txt" style="border:'1px solid #dee0e3';padding:'8px';text-align:'center';background:'#a7e8a0'">Service Is Ready...</div><br></body></html>""".trimIndent()
-                htmlKit.insertHTML(doc as HTMLDocument, doc.length, htmlContent, 0, 0, null)
+                WsState.doradoContent!!.icon = IconLoader.getIcon("/icons/dorado.svg", javaClass)
             }
 
             override fun onMessage(message: String?) {
@@ -370,26 +372,13 @@ Service Is Ready...
                         submitButton.icon = IconLoader.getIcon("/icons/send.svg", javaClass)
                     }
                 }
-
-//                if (content.has("type") && content.getString("type") == "answer_start") {
-//                    try {
-//                        val htmlContent = """<html><body><div id="out_txt" style="border:'1px solid #dee0e3';border-radius:'10px';padding:'8px'"></div><br></body></html>""".trimIndent()
-//                        htmlKit.insertHTML(doc as HTMLDocument, doc.length, htmlContent, 0, 0, null)
-//                    } catch (ex: BadLocationException) {
-//                        ex.printStackTrace()
-//                    }
-//                }
-
                 if (content.has("part")) {
                     doc.insertString(doc.length, content.getString("part"), style);
                 }
             }
 
             override fun onClose(code: Int, reason: String?, remote: Boolean) {
-                val doc = textPane.styledDocument
-                val htmlContent =
-                    """<html><body><div id="out_txt" style="border:'1px solid #dee0e3';padding:'8px';text-align:'center';background:'#fc0000'">Ws Is Ready Failed:$reason</div><br></body></html>""".trimIndent()
-                htmlKit.insertHTML(doc as HTMLDocument, doc.length, htmlContent, 0, 0, null)
+                WsState.doradoContent?.displayName = "Copilot(Closed)"
                 println("WebSocketClient Connect onClose:$reason")
                 if (timer.isRunning) {
                     timer.stop()
@@ -402,10 +391,7 @@ Service Is Ready...
 
             override fun onError(ex: java.lang.Exception?) {
                 println("WebSocketClient Connect onError:${ex?.stackTraceToString()}")
-                val doc = textPane.styledDocument
-                val htmlContent =
-                    """<html><body><div id="out_txt" style="border:'1px solid #dee0e3';padding:'8px';text-align:'center';background:'#fc0000'">Ws Is Ready Exception:${ex?.stackTraceToString()}</div><br></body></html>""".trimIndent()
-                htmlKit.insertHTML(doc as HTMLDocument, doc.length, htmlContent, 0, 0, null)
+                WsState.doradoContent?.displayName = "Copilot(Exception)"
                 if (timer.isRunning) {
                     timer.stop()
                     submitButton.icon = IconLoader.getIcon("/icons/send.svg", javaClass)
@@ -480,29 +466,32 @@ Service Is Ready...
                     // 获取响应数据
                     val responseCode = connection.responseCode
                     if (responseCode == HttpURLConnection.HTTP_OK) {
-                        publish("begin ++++++++++++++++++++++ Chat: $inputText ++++++++++++++++++++ \r\n\n")
+                        //publish("begin ++++++++++++++++++++++ Ollama: $inputText ++++++++++++++++++++ \r\n\n")
+                        val htmlKit = HTMLEditorKit()
+                        try {
+                            val htmlContent =
+                                """<html><body><div style="border:'1px solid #dee0e3';border-radius:'10px';padding:'8px';background:'#dee0e3';">$inputText</div>
+                                                 <br></body></html>
+                                             """.trimIndent()
+                            htmlKit.insertHTML(doc as HTMLDocument, doc.length, htmlContent, 0, 0, null)
+                        } catch (ex: BadLocationException) {
+                            ex.printStackTrace()
+                        }
                         val inputStream = connection.inputStream
                         val reader = BufferedReader(InputStreamReader(inputStream, "utf-8"))
                         var line: String?
                         while (reader.readLine().also { line = it } != null) {
                             val gson = Gson()
-                            // 将字符串转换为JSON对象
                             val jsonObject = gson.fromJson(line, JsonObject::class.java)
-//                            println(
-//                                jsonObject.get("done").asBoolean.toString() + " => " + jsonObject.get("message").asJsonObject.get(
-//                                    "content"
-//                                ).asString
-//                            )
                             val context = jsonObject.get("message").asJsonObject.get("content").asString
                             publish(context)
                             if (jsonObject.get("done").asBoolean) {
                                 jTextField.setEnabled(true);
                                 buttonPanel.setEnabled(true)
                                 submitButton.setEnabled(true);
-                                publish("\r\n\nend +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ \n\n\n")
+                                publish("\r\n\n\n\n\n")
                                 if (timer.isRunning) {
                                     timer.stop()
-                                    // submitButton.isVisible = true
                                     submitButton.icon = IconLoader.getIcon("/icons/send.svg", javaClass)
                                 }
                             }
@@ -511,7 +500,6 @@ Service Is Ready...
                     } else {
                         if (timer.isRunning) {
                             timer.stop()
-                            // submitButton.isVisible = true
                             submitButton.icon = IconLoader.getIcon("/icons/send.svg", javaClass)
                         }
                         jTextField.setEnabled(true);
@@ -522,7 +510,6 @@ Service Is Ready...
                 } catch (ex: Exception) {
                     if (timer.isRunning) {
                         timer.stop()
-                        // submitButton.isVisible = true
                         submitButton.icon = IconLoader.getIcon("/icons/send.svg", javaClass)
                     }
                     jTextField.setEnabled(true);
@@ -536,7 +523,6 @@ Service Is Ready...
 
             override fun process(chunks: MutableList<String>?) {
                 for (chunk in chunks!!) {
-                    // if(chunk.startsWith("```"))
                     doc.insertString(doc.length, chunk, style);
                 }
             }
