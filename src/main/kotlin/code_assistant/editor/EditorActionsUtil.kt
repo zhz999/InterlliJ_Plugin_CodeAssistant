@@ -36,7 +36,7 @@ class EditorActionsUtil {
                     val action: BaseEditorAction = object : BaseEditorAction(label, label) {
                         override fun actionPerformed(project: Project?, editor: Editor?, selectedText: String?) {
 
-                            val message = prompt.replace("{{selectedCode}}", String.format(": %s ", selectedText))
+                            val message = prompt.replace("{{selectedCode}}", String.format(" %s ", selectedText))
 
                             var displayName = "Ollama"
                             if (userGpt == "Copilot") {
