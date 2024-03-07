@@ -65,12 +65,12 @@ class ChatWindow : ToolWindowFactory {
             val size = SwingUtilities.getRoot(component).size
             val width = size.width
             val height = size.height
-            val chatComponent = createToolWindowPanel(width, height, "Ollama", project)
+            val chatComponent = createToolWindowPanel(width, height, "Ollama")
             val chatContent = contentFactory.createContent(chatComponent, "Ollama", false)
             chatContent.icon = IconLoader.getIcon("/icons/ollama.svg", javaClass)
             toolWindow.contentManager.addContent(chatContent)
             if (settings.enabled) {
-                val wsComponent = createToolWindowPanel(width, height, "Copilot", project)
+                val wsComponent = createToolWindowPanel(width, height, "Copilot")
                 WsState.doradoContent = contentFactory.createContent(wsComponent, "Copilot", false)
                 WsState.doradoContent!!.icon = IconLoader.getIcon("/icons/off-dorado.svg", javaClass)
                 toolWindow.contentManager.addContent(WsState.doradoContent!!)
@@ -81,7 +81,7 @@ class ChatWindow : ToolWindowFactory {
     }
 
 
-    private fun createToolWindowPanel(width: Int, height: Int, displayName: String, project: Project): JPanel {
+    private fun createToolWindowPanel(width: Int, height: Int, displayName: String): JPanel {
         val panel = JPanel(BorderLayout())
 
         // 问题

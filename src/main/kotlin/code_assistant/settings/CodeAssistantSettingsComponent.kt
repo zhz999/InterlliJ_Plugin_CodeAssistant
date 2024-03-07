@@ -28,11 +28,11 @@ class CodeAssistantSettingsComponent {
     private val model = JBTextField()
     private val uri = JBTextField()
     private var dorado = JBTextArea("", 5, 80)
-    private var enabled = JBCheckBox("启用字节 Dorado ?")
+    private var enabled = JBCheckBox("启用字节 Copilot ?")
     private val submitButton = JButton("Test Connection")
     private val socketButton = JButton("Test Connection")
     val restartButton = JButton("Restart IDEA")
-    private val gpt = ComboBox(arrayOf("Ollama", "Dorado"))
+    private val gpt = ComboBox(arrayOf("Ollama", "Copilot"))
 
     fun getPanel(): JPanel {
         val settings: CodeAssistantSettingsState = CodeAssistantSettingsState.getInstance()
@@ -40,7 +40,7 @@ class CodeAssistantSettingsComponent {
         dorado.setBorder(JBUI.Borders.empty(10, 8))
         dorado.lineWrap = true
         dorado.wrapStyleWord = false
-        // Dorado 面板
+        // Copilot 面板
         val panel = panel {
             row {
                 cell(
@@ -57,9 +57,9 @@ class CodeAssistantSettingsComponent {
             .addLabeledComponent(JBLabel("Enter ollama uri: "), uri, 1, false)
             .addLabeledComponent(JBLabel("Enter ollama model: "), model, 1, false)
             .addComponent(submitButton, 1)
-            // Dorado Settings
+            // Copilot Settings
             .addVerticalGap(6)
-            .addComponent(TitledSeparator("Dorado Settings"))
+            .addComponent(TitledSeparator("Copilot Settings"))
             .addLabeledComponent(
                 "",
                 panel,
@@ -92,7 +92,7 @@ class CodeAssistantSettingsComponent {
             )
             //
             if (flag == 0) {
-                application.invokeLater( { application.restart()}, ModalityState.nonModal())
+                 application.invokeLater( { application.restart()}, ModalityState.nonModal())
             }
         }
 

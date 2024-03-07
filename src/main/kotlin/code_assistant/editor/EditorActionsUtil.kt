@@ -38,12 +38,17 @@ class EditorActionsUtil {
 
                             val message = prompt.replace("{{selectedCode}}", String.format(": %s ", selectedText))
 
+                            var displayName = "Ollama"
+                            if (userGpt == "Copilot") {
+                                displayName = "Copilot"
+                            }
+
                             val toolWindowManager = project?.let { ToolWindowManager.getInstance(it) }
                             if (toolWindowManager != null) {
                                 val toolWindow = toolWindowManager.getToolWindow("开发助手")
                                 if (toolWindow !== null) {
                                     toolWindow.show()
-                                    val chatToolWindow = toolWindow.contentManager.findContent("Copilot")
+                                    val chatToolWindow = toolWindow.contentManager.findContent(displayName)
                                     val panel = chatToolWindow.component
                                     if (panel is JPanel) {
                                         println("Find panel OK!")
@@ -97,7 +102,7 @@ class EditorActionsUtil {
 
                                                                 println("userGpt: $userGpt")
                                                                 // 发送
-                                                                if (userGpt == "Dorado") {
+                                                                if (userGpt == "Copilot") {
                                                                     ChatWindow.send(
                                                                         panel,
                                                                         buttonPanel,

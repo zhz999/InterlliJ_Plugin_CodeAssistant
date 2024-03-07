@@ -1,23 +1,29 @@
 <idea-plugin>
-    <id>CodeAssistant</id>
-    <name>开发助手</name>
+    <id>CodeAssistantFree</id>
+    <name>开发助手Free</name>
     <depends>com.intellij.modules.platform</depends>
-    <depends>com.intellij.modules.lang</depends>
     <vendor email="zhanghongzhong@bytedance.com">zhanghongzhong</vendor>
+<!--    <product-descriptor code="PCODEASSISFREE" release-date="20240307" release-version="20232" />-->
+    <version>2023.2.2</version>
     <description>
         <![CDATA[
           <ul>
-            <li>1. Download the Plugin</li>
-            <li>2. Configuration ollama</li>
-            <li>3. use code_assistant</li>
+            <li>1. Download "开发助手" Plugin</li>
+            <li>2. Configuration Ollama</li>
+            <li>3. Use "开发助手"</li>
           </ul>
         ]]>
     </description>
     <change-notes>
         <![CDATA[
           <ul>
-            <li>### 1.0.0 : idea2023_sinceBuild212_untilBuild*</li>
-            <li>### 1.0.1 : idea2023_sinceBuild232_untilBuild*</li>
+            <li> 1.0.0 : Add Code Assistant</li>
+            <li> 1.0.1 : Plugin Support User Custom Configuration</li>
+            <li> 1.0.2 : Plugin Support User Custom Configuration Editor Action Prompt</li>
+            <li> 1.0.3 : Plugin GPT Support : Ollama、Dorado-token </li>
+            <li> 1.0.4 : Fix UI </li>
+            <li> 1.0.5 : Fix Bugs </li>
+            <li> 1.0.6 : Publish Release Version To Marketplace </li>
           </ul>
         ]]>
     </change-notes>

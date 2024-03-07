@@ -4,6 +4,6 @@
 
 # Quick Start Guide
 ***
-1. Download the Plugin
-2. Configuration ollama
-3. Use "code_assistant"
+- Download the Plugin
+- Configuration ollama
+- Use "开发助手"

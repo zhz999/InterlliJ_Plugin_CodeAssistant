@@ -6,6 +6,7 @@ plugins {
     id("org.jetbrains.kotlin.jvm") version "1.8.22"
     id("org.jetbrains.intellij") version "1.17.2"
     id("io.ktor.plugin") version "2.3.4"
+//    id("org.jetbrains.intellij") version "1.14.1"
 }
 
 
@@ -21,7 +22,7 @@ dependencies {
 }
 
 group = "com.zhz.code_assistant"
-version = "1.0.5"
+version = "2023.2.2"
 
 application {
     mainClass.set("$group.$name.ApplicationKt")
@@ -33,8 +34,10 @@ repositories {
 
 intellij {
     version.set("2023.2")
-    type.set("IC")
-    pluginName.set("CodeAssistant")
+//    version.set("2022.2.5")
+//    type.set("IC")
+    type.set("IU")
+    pluginName.set("开发助手Free")
     plugins.set(listOf("java"))
 }
 
@@ -62,15 +65,39 @@ tasks {
     patchPluginXml {
         sinceBuild.set("232")
         untilBuild.set("")
+//        sinceBuild.set("222")
+//        untilBuild.set("232.*")
+//        untilBuild.set("232.8660.185")
     }
 
     signPlugin {
+        enabled = true
         certificateChain.set(System.getenv("CERTIFICATE_CHAIN"))
         privateKey.set(System.getenv("PRIVATE_KEY"))
         password.set(System.getenv("PRIVATE_KEY_PASSWORD"))
     }
 
+    buildPlugin {
+        enabled = true
+    }
+
     publishPlugin {
+        enabled = true
+        dependsOn("patchChangelog")
         token.set(System.getenv("PUBLISH_TOKEN"))
+        channels.set(listOf("stable"))
+    }
+
+    runIde {
+        enabled = true
+        environment("ENVIRONMENT", "LOCAL")
+    }
+
+    verifyPlugin {
+        enabled = true
+    }
+
+    runPluginVerifier {
+        enabled = true
     }
 }
