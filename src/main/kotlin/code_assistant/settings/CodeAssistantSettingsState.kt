@@ -15,8 +15,11 @@ final class CodeAssistantSettingsState : PersistentStateComponent<CodeAssistantS
     var userId = "zhanghongzhong@bytedance.com"
     var uri = "http://127.0.0.1:11434/api/chat"
     var model = "gemma:7b"
-    var dorado = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJzZXJ2aWNlIjoiZG9yYWRvLWNvcGlsb3QiLCJ0ZW5hbnRJZCI6MCwiZXhwIjoxNzA5Njk0MzQ0LCJ1c2VyIjoiemhhbmdob25nemhvbmcifQ.FTSFDy4Vk5G6mpNlmGx84zwgvXzBlRm1MD_qKEaPODPFk4N_l-xceKm_1xnv51NexBZ5tbrF-VBagL3kN2XgonFMdRSLFYAoV9b1NmSme3i9znA24GC514rDoUlvMGIdRzSHQ0b8XMmS_5ubFq8Y11zy_Jax8DGtBJeo07WSWxZMSLNXwY0Xq4ruQiRbJrzSeZH9x7ZZeX3MBRbuZWrTizcc0yx6Ec0lcbplFYWxpIjSuKu2o_D9YV4pIA-CdmmWt-TrffNgtBHfUucUjJ2rUTNx3LVn9Y8i-CFYMO0A9qeGxfz8UNcnW2d6K1OwV0j0-TlfJP53QDnkWd-oJzIQLw"
-    var enabled = true
+    var token = "这里使用的是 https://data.bytedance.net/dorado 的 Token"
+    var sessionId = ""
+    var parentMessageId = ""
+    var language = ""
+    var enabled = false
     var gpt = "Ollama"
 
     @Nullable

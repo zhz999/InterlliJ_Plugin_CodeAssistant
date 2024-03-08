@@ -4,7 +4,7 @@
     <depends>com.intellij.modules.platform</depends>
     <vendor email="zhanghongzhong@bytedance.com">zhanghongzhong</vendor>
 <!--    <product-descriptor code="PCODEASSISFREE" release-date="20240307" release-version="20232" />-->
-    <version>2023.2.2</version>
+<!--    <version>2023.2.2</version>-->
     <description>
         <![CDATA[
           <ul>

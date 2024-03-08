@@ -22,7 +22,7 @@ dependencies {
 }
 
 group = "com.zhz.code_assistant"
-version = "2023.2.2"
+version = "1.0.0"
 
 application {
     mainClass.set("$group.$name.ApplicationKt")
@@ -35,8 +35,8 @@ repositories {
 intellij {
     version.set("2023.2")
 //    version.set("2022.2.5")
-//    type.set("IC")
-    type.set("IU")
+    type.set("IC")
+//    type.set("IU")
     pluginName.set("开发助手Free")
     plugins.set(listOf("java"))
 }

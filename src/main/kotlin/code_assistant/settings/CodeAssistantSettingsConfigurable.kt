@@ -34,9 +34,12 @@ class CodeAssistantSettingsConfigurable : Configurable {
         var modified = mySettingsComponent!!.getUserNameText() != settings.userId
         modified = modified or (mySettingsComponent!!.getModel() != settings.model)
         modified = modified or (mySettingsComponent!!.getUri() != settings.uri)
-        modified = modified or (mySettingsComponent!!.getDorado() != settings.dorado)
+        modified = modified or (mySettingsComponent!!.getToken() != settings.token)
         modified = modified or (mySettingsComponent!!.getEnabled() != settings.enabled)
         modified = modified or (mySettingsComponent!!.getGpt() != settings.gpt)
+        modified = modified or (mySettingsComponent!!.getLanguage() != settings.language)
+        modified = modified or (mySettingsComponent!!.getSessionId() != settings.sessionId)
+        modified = modified or (mySettingsComponent!!.getParentMessageId() != settings.parentMessageId)
         return modified
     }
 
@@ -46,12 +49,15 @@ class CodeAssistantSettingsConfigurable : Configurable {
         settings.model = mySettingsComponent!!.getModel()
         settings.uri = mySettingsComponent!!.getUri()
         settings.gpt = mySettingsComponent!!.getGpt()
+        settings.language = mySettingsComponent!!.getLanguage()
+        settings.sessionId = mySettingsComponent!!.getSessionId()
+        settings.parentMessageId = mySettingsComponent!!.getParentMessageId()
 
         // 判断重启生效的配置
-        if (settings.dorado != mySettingsComponent!!.getDorado() ||
+        if (settings.token != mySettingsComponent!!.getToken() ||
             settings.enabled != mySettingsComponent!!.getEnabled()
         ) {
-            settings.dorado = mySettingsComponent!!.getDorado()
+            settings.token = mySettingsComponent!!.getToken()
             settings.enabled = mySettingsComponent!!.getEnabled()
             mySettingsComponent!!.restartButton.isVisible = true
         }
@@ -63,9 +69,12 @@ class CodeAssistantSettingsConfigurable : Configurable {
         mySettingsComponent!!.setUserNameText(settings.userId)
         mySettingsComponent!!.setModel(settings.model)
         mySettingsComponent!!.setUri(settings.uri)
-        mySettingsComponent!!.setDorado(settings.dorado)
+        mySettingsComponent!!.setToken(settings.token)
         mySettingsComponent!!.setEnabled(settings.enabled)
         mySettingsComponent!!.setGpt(settings.gpt)
+        mySettingsComponent!!.setSessionId(settings.sessionId)
+        mySettingsComponent!!.setParentMessageId(settings.parentMessageId)
+        mySettingsComponent!!.setLanguage(settings.language)
     }
 
     override fun disposeUIResources() {

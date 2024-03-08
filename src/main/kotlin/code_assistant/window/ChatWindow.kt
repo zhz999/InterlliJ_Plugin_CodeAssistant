@@ -269,19 +269,24 @@ class ChatWindow : ToolWindowFactory {
 
         @JvmStatic
         fun parseMessage(prompt: String): String {
+
+            val doradoCopilotConfig = CodeAssistantSettingsState.getInstance()
+
             val messagesObject = JSONObject()
             messagesObject.put("jsonrpc", "2.0")
             messagesObject.put("id", 1)
             messagesObject.put("method", "ai/conversation")
 
             val paramsData = JSONObject()
-            paramsData.put("sessionId", "Sx5McJOccMAR3MfU")
-            paramsData.put("parentMessageId", "MO7J6rmDba0KOvuX")
+            paramsData.put("sessionId", doradoCopilotConfig.sessionId)
+            paramsData.put("parentMessageId", doradoCopilotConfig.parentMessageId)
 
             val contentData = JSONObject()
             contentData.put("type", "text")
             contentData.put("message", prompt)
-            // contentData.put("language", "NodeJS")
+            if (doradoCopilotConfig.language.isNotEmpty()) {
+                contentData.put("language", doradoCopilotConfig.language)
+            }
             paramsData.put("content", contentData)
 
             val senderData = JSONObject()
@@ -349,7 +354,7 @@ class ChatWindow : ToolWindowFactory {
     ): WebSocketClient {
 
         val wsClient: WebSocketClient = object :
-            WebSocketClient(URI("wss://data.bytedance.net/socket-dorado/copilot/v1/socket?token=" + settings.dorado)) {
+            WebSocketClient(URI("wss://data.bytedance.net/socket-dorado/copilot/v1/socket?token=" + settings.token)) {
             override fun onOpen(handshakedata: ServerHandshake?) {
                 println("WebSocketClient Connect Success")
                 WsState.doradoContent!!.icon = IconLoader.getIcon("/icons/dorado.svg", javaClass)
@@ -361,6 +366,7 @@ class ChatWindow : ToolWindowFactory {
                 verticalScrollBar.value = verticalScrollBar.maximum
                 val style: Style = doc.addStyle("default", null)
                 StyleConstants.setFontSize(style, 10);
+                println(message)
                 val content = JSONObject(message).getJSONObject("result").getJSONObject("content")
                 if (content.has("type") && content.getString("type") == "answer_end") {
                     println("=========== answer_end")
@@ -378,7 +384,8 @@ class ChatWindow : ToolWindowFactory {
             }
 
             override fun onClose(code: Int, reason: String?, remote: Boolean) {
-                WsState.doradoContent?.displayName = "Copilot(Closed)"
+                WsState.doradoContent!!.icon = IconLoader.getIcon("/icons/dorado.svg", javaClass)
+                WsState.doradoContent!!.tabColor = Color.decode("#dee0e3")
                 println("WebSocketClient Connect onClose:$reason")
                 if (timer.isRunning) {
                     timer.stop()
@@ -391,7 +398,8 @@ class ChatWindow : ToolWindowFactory {
 
             override fun onError(ex: java.lang.Exception?) {
                 println("WebSocketClient Connect onError:${ex?.stackTraceToString()}")
-                WsState.doradoContent?.displayName = "Copilot(Exception)"
+                WsState.doradoContent!!.icon = IconLoader.getIcon("/icons/dorado.svg", javaClass)
+                WsState.doradoContent!!.tabColor = Color.decode("#dee0e3")
                 if (timer.isRunning) {
                     timer.stop()
                     submitButton.icon = IconLoader.getIcon("/icons/send.svg", javaClass)

@@ -10,12 +10,18 @@ import com.intellij.ui.components.JBCheckBox
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBTextArea
 import com.intellij.ui.components.JBTextField
+import com.intellij.ui.dsl.builder.LabelPosition
+import com.intellij.ui.dsl.builder.RowLayout
 import com.intellij.ui.dsl.builder.panel
+import com.intellij.ui.dsl.gridLayout.UnscaledGaps
 import com.intellij.util.ui.FormBuilder
 import com.intellij.util.ui.JBUI
 import org.java_websocket.client.WebSocketClient
 import org.java_websocket.handshake.ServerHandshake
 import org.jetbrains.annotations.NotNull
+import java.awt.Color
+import java.awt.Dimension
+import java.awt.Insets
 import java.net.HttpURLConnection
 import java.net.URI
 import java.net.URL
@@ -27,8 +33,11 @@ class CodeAssistantSettingsComponent {
     private val myUserNameText = JBTextField()
     private val model = JBTextField()
     private val uri = JBTextField()
-    private var dorado = JBTextArea("", 5, 80)
-    private var enabled = JBCheckBox("启用字节 Copilot ?")
+    private var token = JBTextArea("", 7, 68)
+    private val sessionId = JBTextField()
+    private val parentMessageId = JBTextField()
+    private val language = JBTextField(20)
+    private var enabled = JBCheckBox("启用字节 Dorado Copilot 窗口?")
     private val submitButton = JButton("Test Connection")
     private val socketButton = JButton("Test Connection")
     val restartButton = JButton("Restart IDEA")
@@ -37,17 +46,24 @@ class CodeAssistantSettingsComponent {
     fun getPanel(): JPanel {
         val settings: CodeAssistantSettingsState = CodeAssistantSettingsState.getInstance()
         restartButton.isVisible = false
-        dorado.setBorder(JBUI.Borders.empty(10, 8))
-        dorado.lineWrap = true
-        dorado.wrapStyleWord = false
+        token.setMargin(JBUI.insets(10, 8))
+//        token.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.decode("#dee0e3")))
+        token.lineWrap = true
+        token.wrapStyleWord = false
+//        token.preferredSize = Dimension(100, Int.MAX_VALUE)
         // Copilot 面板
         val panel = panel {
+            threeColumnsRow({
+                cell(sessionId).label("SessionId:",LabelPosition.TOP)
+                cell(parentMessageId).label("ParentMessageId:",LabelPosition.TOP)
+                cell(language).label("Language:",LabelPosition.TOP)
+            })
             row {
-                cell(
-                    dorado
-                )
-            }
-            row { comment("这里使用的是 https://data.bytedance.net/dorado 的 Token") }
+                cell(token)
+                    .label("Token:",LabelPosition.TOP)
+                    .customize(UnscaledGaps(10,6,10,6))
+                    .comment("这里使用的是 https://data.bytedance.net/dorado 的 Token")
+            }.layout(RowLayout.INDEPENDENT)
         }
         // 设置面板
         myMainPanel = FormBuilder.createFormBuilder()
@@ -59,29 +75,34 @@ class CodeAssistantSettingsComponent {
             .addComponent(submitButton, 1)
             // Copilot Settings
             .addVerticalGap(6)
-            .addComponent(TitledSeparator("Copilot Settings"))
+            .addComponent(TitledSeparator("Dorado Copilot Settings"))
+//            .addLabeledComponent(JBLabel("SessionId: "), sessionId, 1, false)
+//            .addLabeledComponent(JBLabel("ParentMessageId: "), parentMessageId, 1, false)
+//            .addLabeledComponent(JBLabel("Language: "), language, 1, false)
+//            .addLabeledComponent(JBLabel("Token: "), token, 6, false)
             .addLabeledComponent(
                 "",
                 panel,
-                1,
-                true
+                4,
+                false
             )
             .addLabeledComponent(socketButton, enabled, 3, false)
             // Editor Action Settings
             .addVerticalGap(6)
-            .addComponent(TitledSeparator("Editor Action Settings"))
-            .addLabeledComponent(JBLabel("Select editor action channel: "), gpt, 1, false)
+            .addComponent(TitledSeparator("Select Editor Action Use Model Channel"))
+            .addComponent(gpt, 1)
 
             .addVerticalGap(6)
-            .addComponent(restartButton,2)
+            .addComponent(restartButton, 2)
 
             .addComponentFillVertically(JPanel(), 0)
             .panel
 
-        restartButton.addActionListener{
+
+        restartButton.addActionListener {
             val application: Application = ApplicationManager.getApplication()
             val windowManager = WindowManager.getInstance()
-            for (win in windowManager.allProjectFrames){
+            for (win in windowManager.allProjectFrames) {
                 println(win.project?.name)
                 println(win.component?.name)
             }
@@ -92,7 +113,7 @@ class CodeAssistantSettingsComponent {
             )
             //
             if (flag == 0) {
-                 application.invokeLater( { application.restart()}, ModalityState.nonModal())
+                application.invokeLater({ application.restart() }, ModalityState.nonModal())
             }
         }
 
@@ -100,9 +121,9 @@ class CodeAssistantSettingsComponent {
         // 按钮事件
         socketButton.addActionListener {
             socketButton.setEnabled(false);
-            println(settings.dorado)
+            println(settings.token)
             val wsClient = object :
-                WebSocketClient(URI("wss://data.bytedance.net/socket-dorado/copilot/v1/socket?token=" + settings.dorado)) {
+                WebSocketClient(URI("wss://data.bytedance.net/socket-dorado/copilot/v1/socket?token=" + settings.token)) {
                 override fun onOpen(handshakedata: ServerHandshake?) {
                     JOptionPane.showMessageDialog(myMainPanel, "connection success")
                     close(1000)
@@ -202,12 +223,12 @@ class CodeAssistantSettingsComponent {
         uri.text = newText
     }
 
-    fun getDorado(): String {
-        return dorado.getText()
+    fun getToken(): String {
+        return token.getText()
     }
 
-    fun setDorado(newText: String) {
-        dorado.text = newText
+    fun setToken(newText: String) {
+        token.text = newText
     }
 
     fun getEnabled(): Boolean {
@@ -224,6 +245,32 @@ class CodeAssistantSettingsComponent {
 
     fun setGpt(selectedItem: String) {
         gpt.selectedItem = selectedItem
+    }
+
+
+    fun getSessionId(): String {
+        return sessionId.getText()
+    }
+
+    fun setSessionId(newText: String) {
+        sessionId.text = newText
+    }
+
+
+    fun getParentMessageId(): String {
+        return parentMessageId.getText()
+    }
+
+    fun setParentMessageId(newText: String) {
+        parentMessageId.text = newText
+    }
+
+    fun getLanguage(): String {
+        return language.getText()
+    }
+
+    fun setLanguage(newText: String) {
+        language.text = newText
     }
 
 }
