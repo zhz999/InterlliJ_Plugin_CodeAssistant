@@ -5,6 +5,7 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.ModalityState
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.openapi.wm.WindowManager
+import com.intellij.ui.JBColor
 import com.intellij.ui.TitledSeparator
 import com.intellij.ui.components.JBCheckBox
 import com.intellij.ui.components.JBLabel
@@ -19,6 +20,7 @@ import com.intellij.util.ui.JBUI
 import org.java_websocket.client.WebSocketClient
 import org.java_websocket.handshake.ServerHandshake
 import org.jetbrains.annotations.NotNull
+import java.awt.BorderLayout
 import java.awt.Color
 import java.awt.Dimension
 import java.awt.Insets
@@ -27,17 +29,16 @@ import java.net.URI
 import java.net.URL
 import javax.swing.*
 
-
 class CodeAssistantSettingsComponent {
     private lateinit var myMainPanel: JPanel
     private val myUserNameText = JBTextField()
     private val model = JBTextField()
     private val uri = JBTextField()
-    private var token = JBTextArea("", 7, 68)
+    private var token = JEditorPane()//JBTextArea("", 7, 68)
     private val sessionId = JBTextField()
     private val parentMessageId = JBTextField()
-    private val language = JBTextField(20)
-    private var enabled = JBCheckBox("启用字节 Dorado Copilot 窗口?")
+    private val language = JBTextField()
+    private var enabled = JBCheckBox("启用字节 Dorado Copilot 窗口 ?")
     private val submitButton = JButton("Test Connection")
     private val socketButton = JButton("Test Connection")
     val restartButton = JButton("Restart IDEA")
@@ -46,25 +47,30 @@ class CodeAssistantSettingsComponent {
     fun getPanel(): JPanel {
         val settings: CodeAssistantSettingsState = CodeAssistantSettingsState.getInstance()
         restartButton.isVisible = false
+        restartButton.foreground = Color.decode("#5083FB")
+
+        val jPanel = JPanel(BorderLayout())
+        jPanel.add(enabled,BorderLayout.WEST)
+        jPanel.add(restartButton,BorderLayout.EAST)
+        token.background = JBColor.WHITE
         token.setMargin(JBUI.insets(10, 8))
-//        token.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.decode("#dee0e3")))
-        token.lineWrap = true
-        token.wrapStyleWord = false
-//        token.preferredSize = Dimension(100, Int.MAX_VALUE)
+//        token.preferredSize =Dimension(100,80)
+//        token.lineWrap = true
+//        token.wrapStyleWord = false
         // Copilot 面板
-        val panel = panel {
-            threeColumnsRow({
-                cell(sessionId).label("SessionId:",LabelPosition.TOP)
-                cell(parentMessageId).label("ParentMessageId:",LabelPosition.TOP)
-                cell(language).label("Language:",LabelPosition.TOP)
-            })
-            row {
-                cell(token)
-                    .label("Token:",LabelPosition.TOP)
-                    .customize(UnscaledGaps(10,6,10,6))
-                    .comment("这里使用的是 https://data.bytedance.net/dorado 的 Token")
-            }.layout(RowLayout.INDEPENDENT)
-        }
+//        val panel = panel {
+//            threeColumnsRow({
+//                cell(sessionId).label("SessionId:",LabelPosition.TOP)
+//                cell(parentMessageId).label("ParentMessageId:",LabelPosition.TOP)
+//                cell(language).label("Language:",LabelPosition.TOP)
+//            })
+//            row {
+//                cell(token)
+//                    .label("Token:",LabelPosition.TOP)
+//                    .customize(UnscaledGaps(10,6,10,6))
+//                    .comment("这里使用的是 https://data.bytedance.net/dorado 的 Token")
+//            }.layout(RowLayout.INDEPENDENT)
+//        }
         // 设置面板
         myMainPanel = FormBuilder.createFormBuilder()
             // Ollama Settings
@@ -76,25 +82,21 @@ class CodeAssistantSettingsComponent {
             // Copilot Settings
             .addVerticalGap(6)
             .addComponent(TitledSeparator("Dorado Copilot Settings"))
-//            .addLabeledComponent(JBLabel("SessionId: "), sessionId, 1, false)
-//            .addLabeledComponent(JBLabel("ParentMessageId: "), parentMessageId, 1, false)
-//            .addLabeledComponent(JBLabel("Language: "), language, 1, false)
-//            .addLabeledComponent(JBLabel("Token: "), token, 6, false)
-            .addLabeledComponent(
-                "",
-                panel,
-                4,
-                false
-            )
-            .addLabeledComponent(socketButton, enabled, 3, false)
+            .addLabeledComponent(JBLabel("SessionId: "), sessionId, 1, false)
+            .addLabeledComponent(JBLabel("ParentMessageId: "), parentMessageId, 1, false)
+            .addLabeledComponent(JBLabel("Language: "), language, 1, false)
+            .addLabeledComponent(JBLabel("Token: "), token, 6, false)
+//            .addLabeledComponent(
+//                "",
+//                panel,
+//                4,
+//                false
+//            )
+            .addLabeledComponent(socketButton, jPanel, 3, false)
             // Editor Action Settings
             .addVerticalGap(6)
             .addComponent(TitledSeparator("Select Editor Action Use Model Channel"))
             .addComponent(gpt, 1)
-
-            .addVerticalGap(6)
-            .addComponent(restartButton, 2)
-
             .addComponentFillVertically(JPanel(), 0)
             .panel
 

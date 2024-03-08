@@ -3,22 +3,21 @@ package code_assistant.window
 import code_assistant.settings.CodeAssistantSettingsState
 import com.google.gson.Gson
 import com.google.gson.JsonObject
-import com.intellij.openapi.editor.EditorFactory
-import com.intellij.openapi.editor.EditorKind
+import com.intellij.openapi.application.Application
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.util.IconLoader
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
+import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.ui.ColorUtil
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.content.Content
 import com.intellij.ui.content.ContentFactory
 import com.intellij.util.ui.JBUI
-import com.vladsch.flexmark.parser.Parser
-import com.vladsch.flexmark.util.ast.Document
 import org.java_websocket.client.WebSocketClient
 import org.java_websocket.handshake.ServerHandshake
 import org.json.JSONObject
@@ -65,23 +64,28 @@ class ChatWindow : ToolWindowFactory {
             val size = SwingUtilities.getRoot(component).size
             val width = size.width
             val height = size.height
-            val chatComponent = createToolWindowPanel(width, height, "Ollama")
+            val chatComponent = createToolWindowPanel(width, height, "Ollama", project, toolWindow)
             val chatContent = contentFactory.createContent(chatComponent, "Ollama", false)
             chatContent.icon = IconLoader.getIcon("/icons/ollama.svg", javaClass)
             toolWindow.contentManager.addContent(chatContent)
             if (settings.enabled) {
-                val wsComponent = createToolWindowPanel(width, height, "Copilot")
+                val wsComponent = createToolWindowPanel(width, height, "Copilot", project, toolWindow)
                 WsState.doradoContent = contentFactory.createContent(wsComponent, "Copilot", false)
                 WsState.doradoContent!!.icon = IconLoader.getIcon("/icons/off-dorado.svg", javaClass)
                 toolWindow.contentManager.addContent(WsState.doradoContent!!)
             }
+
+
         } catch (e: IOException) {
             Messages.showErrorDialog(project, e.stackTraceToString(), "打开插件失败")
         }
     }
 
 
-    private fun createToolWindowPanel(width: Int, height: Int, displayName: String): JPanel {
+    private fun createToolWindowPanel(
+        width: Int, height: Int, displayName: String,
+        project: Project, toolWindow: ToolWindow
+    ): JPanel {
         val panel = JPanel(BorderLayout())
 
         // 问题
@@ -184,8 +188,6 @@ class ChatWindow : ToolWindowFactory {
         if (displayName == "Copilot") {
             WsState.wsTimer = Timer(500, ActionListener {
                 counts += 1
-                // 模拟加载过程
-                //submitButton.isVisible = !submitButton.isVisible
                 val flag = counts % 2
                 if (flag == 1) {
                     submitButton.setEnabled(true);
@@ -202,7 +204,9 @@ class ChatWindow : ToolWindowFactory {
                     buttonPanel,
                     jTextField,
                     WsState.wsTimer!!,
-                    scrollPane
+                    scrollPane,
+                    project,
+                    toolWindow,
                 )
         }
 
@@ -344,13 +348,26 @@ class ChatWindow : ToolWindowFactory {
     }
 
 
+    private fun setStatus(project: Project, toolWindow: ToolWindow, status: String) {
+        var ico = "/icons/app-icon-off.svg"
+        if (status == "Success") {
+            ico = "/icons/app-icon-online.svg"
+        }
+        val icon: Icon = IconLoader.getIcon(ico, javaClass)
+        val application: Application = ApplicationManager.getApplication()
+        application.invokeLater { toolWindow.setIcon(icon) }
+    }
+
+
     private fun connectWs(
         textPane: JTextPane,
         submitButton: JButton,
         buttonPanel: JPanel,
         jTextField: JTextField,
         timer: Timer,
-        scrollPane: JBScrollPane
+        scrollPane: JBScrollPane,
+        project: Project,
+        toolWindow: ToolWindow
     ): WebSocketClient {
 
         val wsClient: WebSocketClient = object :
@@ -358,6 +375,7 @@ class ChatWindow : ToolWindowFactory {
             override fun onOpen(handshakedata: ServerHandshake?) {
                 println("WebSocketClient Connect Success")
                 WsState.doradoContent!!.icon = IconLoader.getIcon("/icons/dorado.svg", javaClass)
+                setStatus(project, toolWindow, "Success")
             }
 
             override fun onMessage(message: String?) {
@@ -385,7 +403,7 @@ class ChatWindow : ToolWindowFactory {
 
             override fun onClose(code: Int, reason: String?, remote: Boolean) {
                 WsState.doradoContent!!.icon = IconLoader.getIcon("/icons/dorado.svg", javaClass)
-                WsState.doradoContent!!.tabColor = Color.decode("#dee0e3")
+                setStatus(project, toolWindow, "Closed")
                 println("WebSocketClient Connect onClose:$reason")
                 if (timer.isRunning) {
                     timer.stop()
@@ -399,7 +417,7 @@ class ChatWindow : ToolWindowFactory {
             override fun onError(ex: java.lang.Exception?) {
                 println("WebSocketClient Connect onError:${ex?.stackTraceToString()}")
                 WsState.doradoContent!!.icon = IconLoader.getIcon("/icons/dorado.svg", javaClass)
-                WsState.doradoContent!!.tabColor = Color.decode("#dee0e3")
+                setStatus(project, toolWindow, "Exception")
                 if (timer.isRunning) {
                     timer.stop()
                     submitButton.icon = IconLoader.getIcon("/icons/send.svg", javaClass)
@@ -452,7 +470,7 @@ class ChatWindow : ToolWindowFactory {
         val settings: CodeAssistantSettingsState = CodeAssistantSettingsState.getInstance()
         val messagesObject = JsonObject()
         messagesObject.addProperty("role", "user")
-        messagesObject.addProperty("content", "```$inputText```")
+        messagesObject.addProperty("content", inputText)
         val postData = JsonObject()
         postData.addProperty("model", settings.model)
         postData.add("messages", Gson().toJsonTree(arrayOf(messagesObject)).asJsonArray)

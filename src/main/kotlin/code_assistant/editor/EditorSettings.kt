@@ -16,8 +16,8 @@ class EditorPopupMenu1 : ActionGroup() {
         EditorActionsUtil.refreshActions()
         // 创建子菜单项
         return arrayOf(
-            MyAction("Open Assistant","Open Assistant",IconLoader.getIcon("/icons/app-icon-light.svg", javaClass)),
-            MyAction("Open Settings","Open Settings",IconLoader.getIcon("/icons/app-icon-light.svg", javaClass)),
+            MyAction("Open Assistant","Open Assistant",IconLoader.getIcon("/icons/app-icon-off.svg", javaClass)),
+            MyAction("Open Settings","Open Settings",IconLoader.getIcon("/icons/app-icon-off.svg", javaClass)),
             Separator.getInstance(),
         )
     }
