@@ -432,6 +432,7 @@ class ChatWindow : ToolWindowFactory {
     }
 
 
+//    https://github.com/ollama/ollama/blob/main/docs/api.md
     fun submit(
         textPane: JTextPane,
         inputText: String,
@@ -473,6 +474,14 @@ class ChatWindow : ToolWindowFactory {
         messagesObject.addProperty("content", inputText)
         val postData = JsonObject()
         postData.addProperty("model", settings.model)
+
+        val options = JsonObject()
+        options.addProperty("num_ctx", 4096)
+        options.addProperty("temperature", 0.99)
+        options.addProperty("top_k", 100)
+        options.addProperty("top_p", 0.95)
+        postData.add("options", options)
+
         postData.add("messages", Gson().toJsonTree(arrayOf(messagesObject)).asJsonArray)
         val worker = object : SwingWorker<Void, String>() {
             override fun doInBackground(): Void? {
