@@ -21,6 +21,7 @@ internal abstract class BaseEditorAction @JvmOverloads constructor(
     }
 
     protected abstract fun actionPerformed(project: Project?, editor: Editor?, selectedText: String?)
+
     override fun actionPerformed(event: AnActionEvent) {
         val project = event.project
         val editor = event.getData(PlatformDataKeys.EDITOR)
@@ -28,7 +29,6 @@ internal abstract class BaseEditorAction @JvmOverloads constructor(
             actionPerformed(project, editor, editor.selectionModel.selectedText)
         }
     }
-
     override fun update(event: AnActionEvent) {
         val project = event.project
         val editor = event.getData(PlatformDataKeys.EDITOR)

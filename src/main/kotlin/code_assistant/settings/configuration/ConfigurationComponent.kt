@@ -21,11 +21,11 @@ class ConfigurationComponent(configuration: ConfigurationState) {
                 arrayOf("Action", "Prompt")
             )
         )
-        table.columnModel.getColumn(0).setPreferredWidth(60)
-        table.columnModel.getColumn(1).setPreferredWidth(240)
+        table.columnModel.getColumn(0).preferredWidth = 60
+        table.columnModel.getColumn(1).preferredWidth = 240
         table.emptyText.setText("No actions configured")
         val tablePanel = createTablePanel()
-        tablePanel.setBorder(BorderFactory.createTitledBorder("Editor Actions"))
+        tablePanel.border = BorderFactory.createTitledBorder("Editor Actions")
         panel = FormBuilder.createFormBuilder()
             .addComponent(tablePanel)
             .addVerticalGap(4)
@@ -79,3 +79,5 @@ class ConfigurationComponent(configuration: ConfigurationState) {
 
 
 }
+
+

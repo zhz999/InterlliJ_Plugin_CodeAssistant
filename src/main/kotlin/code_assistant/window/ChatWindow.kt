@@ -1,5 +1,6 @@
 package code_assistant.window
 
+import code_assistant.common.Message
 import code_assistant.settings.CodeAssistantSettingsState
 import com.google.gson.Gson
 import com.google.gson.JsonObject
@@ -36,7 +37,12 @@ import javax.swing.text.StyleConstants
 import javax.swing.text.html.HTMLDocument
 import javax.swing.text.html.HTMLEditorKit
 
-
+/**
+ *
+ * [官方文档](https://jetbrains.design/intellij/)
+ *
+ * [社区文档](https://www.ideaplugin.com/home.html)
+ */
 class ChatWindow : ToolWindowFactory {
 
     private val settings: CodeAssistantSettingsState = CodeAssistantSettingsState.getInstance()
@@ -95,13 +101,13 @@ class ChatWindow : ToolWindowFactory {
         issuePane.editorKit = HTMLEditorKit()
         issuePane.isEditable = false
         val issuePaneFont: Font = issuePane.font
-        issuePane.setFont(issuePaneFont.deriveFont(14f));
+        issuePane.font = issuePaneFont.deriveFont(14f);
         issuePane.text = "Ask me anything..."
         issuePane.setMargin(JBUI.insets(10, 5));
         val scrollIssuePanePane = JBScrollPane(issuePane)
-        scrollIssuePanePane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        scrollIssuePanePane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
-        scrollIssuePanePane.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.decode("#dee0e3")))
+        scrollIssuePanePane.horizontalScrollBarPolicy = JScrollPane.HORIZONTAL_SCROLLBAR_NEVER;
+        scrollIssuePanePane.verticalScrollBarPolicy = JScrollPane.VERTICAL_SCROLLBAR_ALWAYS;
+        scrollIssuePanePane.border = BorderFactory.createMatteBorder(0, 0, 1, 0, Color.decode("#dee0e3"))
         if (displayName == "Ollama") {
             // panel.add(scrollIssuePanePane, BorderLayout.NORTH)
         }
@@ -114,8 +120,8 @@ class ChatWindow : ToolWindowFactory {
         textPane.editorKit = HTMLEditorKit()
         textPane.isEditable = false
         val font: Font = textPane.font
-        textPane.setFont(font.deriveFont(10f));
-        textPane.setMargin(JBUI.insets(8, 5));
+        textPane.font = font.deriveFont(10f);
+        textPane.margin = JBUI.insets(8, 5);
         textPane.size = textPanePreferredSize
         textPane.preferredSize = textPanePreferredSize
         val scrollPane = JBScrollPane(textPane)
@@ -352,6 +358,9 @@ class ChatWindow : ToolWindowFactory {
         var ico = "/icons/app-icon-off.svg"
         if (status == "Success") {
             ico = "/icons/app-icon-online.svg"
+            Message.Info("Copilot Is Ready OK!")
+        } else {
+            Message.Error("Copilot Is Ready Failed : $status")
         }
         val icon: Icon = IconLoader.getIcon(ico, javaClass)
         val application: Application = ApplicationManager.getApplication()
@@ -432,7 +441,7 @@ class ChatWindow : ToolWindowFactory {
     }
 
 
-//    https://github.com/ollama/ollama/blob/main/docs/api.md
+    //    https://github.com/ollama/ollama/blob/main/docs/api.md
     fun submit(
         textPane: JTextPane,
         inputText: String,

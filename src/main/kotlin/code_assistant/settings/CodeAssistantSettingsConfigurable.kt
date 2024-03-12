@@ -1,15 +1,10 @@
 package code_assistant.settings
 
-import com.intellij.openapi.application.Application
-import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.application.ModalityState
+import code_assistant.common.Message
 import com.intellij.openapi.options.Configurable
-import com.intellij.openapi.wm.WindowManager
 import org.jetbrains.annotations.Nls
 import org.jetbrains.annotations.Nullable
 import javax.swing.JComponent
-import javax.swing.JOptionPane
-import javax.swing.JOptionPane.YES_NO_OPTION
 
 class CodeAssistantSettingsConfigurable : Configurable {
     private var mySettingsComponent: CodeAssistantSettingsComponent? = null
@@ -59,7 +54,9 @@ class CodeAssistantSettingsConfigurable : Configurable {
         ) {
             settings.token = mySettingsComponent!!.getToken()
             settings.enabled = mySettingsComponent!!.getEnabled()
-            mySettingsComponent!!.restartButton.isVisible = true
+            //Message.Info("温馨提示：修改配置将在重启应用后生效！")
+            mySettingsComponent!!.restartResult.font = mySettingsComponent!!.restartResult.font.deriveFont(10f)
+            mySettingsComponent!!.restartResult.text = "温馨提示：修改配置将在重启应用后生效！"
         }
 
     }

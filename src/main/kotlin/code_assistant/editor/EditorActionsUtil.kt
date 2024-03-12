@@ -1,8 +1,11 @@
 package code_assistant.editor
 
 import code_assistant.settings.CodeAssistantSettingsState
+import code_assistant.settings.configuration.ConfigurationSettings
+import code_assistant.window.ChatWindow
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.AnAction
+import com.intellij.openapi.actionSystem.CustomShortcutSet
 import com.intellij.openapi.actionSystem.DefaultActionGroup
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.extensions.PluginId
@@ -10,12 +13,12 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.IconLoader
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.util.containers.toArray
-import code_assistant.window.ChatWindow
-import code_assistant.settings.configuration.ConfigurationSettings
+import java.awt.event.InputEvent
+import java.awt.event.KeyEvent
 import java.util.*
 import java.util.stream.Collectors
 import javax.swing.*
-import kotlin.collections.LinkedHashMap
+
 
 /**
  * 动态注册 Editor ActionGroup
@@ -29,13 +32,14 @@ class EditorActionsUtil {
             if (actionGroup is DefaultActionGroup) {
                 actionGroup.removeAll()
                 actionGroup.addSeparator()
-
+                // val aa = Bundle.message("project.name")
+                // println(aa)
                 val userGpt = CodeAssistantSettingsState.getInstance().gpt
                 val configuredActions: Map<String, String> = ConfigurationSettings.getCurrentState().getTableData()
                 configuredActions.forEach { (label, prompt) ->
                     val action: BaseEditorAction = object : BaseEditorAction(label, label) {
-                        override fun actionPerformed(project: Project?, editor: Editor?, selectedText: String?) {
 
+                        override fun actionPerformed(project: Project?, editor: Editor?, selectedText: String?) {
                             val message = prompt.replace("{{selectedCode}}", String.format(" %s ", selectedText))
 
                             var displayName = "Ollama"
@@ -132,6 +136,16 @@ class EditorActionsUtil {
                             }
                         }
                     }
+
+                    // 绑定快捷键
+//                     action.registerCustomShortcutSet(
+//                         CustomShortcutSet(
+//                             KeyStroke.getKeyStroke(
+//                                 KeyEvent.VK_ENTER,
+//                                 InputEvent.CTRL_DOWN_MASK
+//                             )
+//                         ), null)
+
                     actionGroup.add(action)
                 }
             }
@@ -142,10 +156,13 @@ class EditorActionsUtil {
             val txt = action.templateText
             if (txt !== null) {
                 val actionId: String = convertToId(txt)
-                // val ext = actionManager.getAction(actionId)
+               // val ext = actionManager.getAction(actionId)
                 if (actionManager.getAction(actionId) != null) {
                     // println(actionId)
                     // actionManager.replaceAction(actionId, action)
+                    // val presentation: Presentation = e.getPresentation()
+                    // val component: JComponent = presentation.getComponent()
+                    // action.unregisterCustomShortcutSet(component)
                 } else {
                     actionManager.registerAction(actionId, action, PluginId.getId("code_assistant"))
                 }
@@ -156,6 +173,7 @@ class EditorActionsUtil {
             return "code.assistant.action.editor.configuration." + label.replace("\\s".toRegex(), "")
                 .lowercase(Locale.getDefault()).trim()
         }
+
 
         var defaultActions: Map<String, String> = LinkedHashMap(
             java.util.Map.of(

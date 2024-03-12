@@ -1,10 +1,11 @@
 <idea-plugin>
     <id>CodeAssistantFree</id>
     <name>开发助手Free</name>
-    <depends>com.intellij.modules.platform</depends>
     <vendor email="zhanghongzhong@bytedance.com">zhanghongzhong</vendor>
-<!--    <product-descriptor code="PCODEASSISFREE" release-date="20240307" release-version="20232" />-->
-<!--    <version>2023.2.2</version>-->
+    <depends>com.intellij.modules.platform</depends>
+    <resource-bundle>messages.code_assistant</resource-bundle>
+    <!--    <product-descriptor code="PCODEASSISFREE" release-date="20240307" release-version="20232" />-->
+    <!--    <version>2023.2.2</version>-->
     <description>
         <![CDATA[
           <ul>
@@ -53,16 +54,10 @@
                 instance="code_assistant.settings.configuration.ConfigurationConfigurable"/>
         <applicationService serviceImplementation="code_assistant.settings.configuration.ConfigurationSettings"/>
 
+        <notificationGroup id="CodeAssist Notification Group" displayType="BALLOON" key="notification.group.name"/>
+
     </extensions>
     <actions>
-
-<!--        <action id="ApplicationWindow"-->
-<!--                class="code_assistant.tool.ApplicationWindow"-->
-<!--                text="Open Assistant"-->
-<!--                popup="true"-->
-<!--                icon="code_assistant.common.Icons.DefaultSmall">-->
-<!--            <add-to-group group-id="EditorPopupMenu1" anchor="first"/>-->
-<!--        </action>-->
 
         <action id="Png-icons"
                 class="code_assistant.common.PngToIcon"
@@ -85,8 +80,8 @@
             <reference id="StatusBar.openSettings"/>
         </group>
 
-        <group id="code_assistant.editor.EditorPopupMenu1"
-               class="code_assistant.editor.EditorPopupMenu1"
+        <group id="CodeAssistEditorTool"
+               class="code_assistant.editor.EditorPopupMenu"
                text="Quick Action"
                description="Quick action"
                icon="code_assistant.common.Icons.DefaultSmall"
@@ -104,5 +99,15 @@
             <add-to-group group-id="EditorPopupMenu1" anchor="first"/>
         </group>
 
+<!--        <action id="ApplicationWindow"-->
+<!--                class="code_assistant.tool.ApplicationWindow"-->
+<!--                text="Open App"-->
+<!--                description="Open app">-->
+<!--            <add-to-group group-id="CodeAssistEditorPopup" anchor="first"/>-->
+<!--            <keyboard-shortcut keymap="$default" first-keystroke="shift meta Z" second-keystroke="ENTER"/>-->
+<!--        </action>-->
+
+
     </actions>
+
 </idea-plugin>
