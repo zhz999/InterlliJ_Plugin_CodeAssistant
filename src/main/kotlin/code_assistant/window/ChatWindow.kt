@@ -208,6 +208,7 @@ class ChatWindow : ToolWindowFactory {
         if (displayName == "Ollama") {
             inputBoxPanel.add(toolPanel, BorderLayout.NORTH)//上
         }
+        inputBoxPanel.add(JSeparator(), BorderLayout.CENTER)//上
         inputBoxPanel.add(inputPanel, BorderLayout.SOUTH)//下
         panel.add(inputBoxPanel, BorderLayout.SOUTH)
 
