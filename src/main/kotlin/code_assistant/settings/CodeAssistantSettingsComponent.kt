@@ -56,7 +56,7 @@ class CodeAssistantSettingsComponent {
         token = JEditorPane()
         token.background = JBColor.WHITE
         token.margin = JBUI.insets(20, 10)
-        token.border = JBUI.Borders.customLine(JBColor.decode("#5083FB"))
+        token.border = JBUI.Borders.customLine(JBColor.decode("#dee0e3"))
         token.text = "启用字节 Dorado Copilot 窗口 ?"
         tPanel.setFormLeftIndent(3)
         tPanel.addComponent(token, 4)

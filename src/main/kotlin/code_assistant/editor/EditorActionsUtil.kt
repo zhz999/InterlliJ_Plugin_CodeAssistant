@@ -5,16 +5,14 @@ import code_assistant.settings.configuration.ConfigurationSettings
 import code_assistant.window.ChatWindow
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.AnAction
-import com.intellij.openapi.actionSystem.CustomShortcutSet
 import com.intellij.openapi.actionSystem.DefaultActionGroup
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.IconLoader
 import com.intellij.openapi.wm.ToolWindowManager
+import com.intellij.ui.components.JBTextArea
 import com.intellij.util.containers.toArray
-import java.awt.event.InputEvent
-import java.awt.event.KeyEvent
 import java.util.*
 import java.util.stream.Collectors
 import javax.swing.*
@@ -94,13 +92,12 @@ class EditorActionsUtil {
                                                             }
                                                         }
                                                         for (n in 0 until buttonPanel.componentCount) {
-                                                            val jTextField = buttonPanel.getComponent(n)
-                                                            if (jTextField is JTextField) {
-                                                                println("Find jTextField OK!")
-
+                                                            val input = buttonPanel.getComponent(n)
+                                                            if (input is JBTextArea) {
+                                                                println("Find input OK!")
                                                                 buttonPanel.setEnabled(false)
                                                                 submitBtn.setEnabled(false);
-                                                                jTextField.setEnabled(false);
+                                                                input.setEnabled(false);
                                                                 submitBtn.icon =
                                                                     IconLoader.getIcon("/icons/dis-send.svg", javaClass)
 
@@ -110,7 +107,7 @@ class EditorActionsUtil {
                                                                     ChatWindow.send(
                                                                         panel,
                                                                         buttonPanel,
-                                                                        jTextField,
+                                                                        input,
                                                                         message,
                                                                         outPane
                                                                     )
@@ -119,9 +116,9 @@ class EditorActionsUtil {
                                                                         outPane,
                                                                         message,
                                                                         panel,
-                                                                        submitBtn,
                                                                         buttonPanel,
-                                                                        jTextField
+                                                                        input,
+                                                                        submitBtn
                                                                     )
                                                                 }
 
@@ -156,7 +153,7 @@ class EditorActionsUtil {
             val txt = action.templateText
             if (txt !== null) {
                 val actionId: String = convertToId(txt)
-               // val ext = actionManager.getAction(actionId)
+                // val ext = actionManager.getAction(actionId)
                 if (actionManager.getAction(actionId) != null) {
                     // println(actionId)
                     // actionManager.replaceAction(actionId, action)

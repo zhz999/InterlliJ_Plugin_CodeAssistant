@@ -1,5 +1,6 @@
 package code_assistant.window
 
+import code_assistant.common.Icons
 import code_assistant.common.Message
 import code_assistant.settings.CodeAssistantSettingsState
 import com.google.gson.Gson
@@ -12,10 +13,10 @@ import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.util.IconLoader
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
-import com.intellij.openapi.wm.ToolWindowManager
-import com.intellij.ui.ColorUtil
+import com.intellij.ui.DocumentAdapter
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBScrollPane
+import com.intellij.ui.components.JBTextArea
 import com.intellij.ui.content.Content
 import com.intellij.ui.content.ContentFactory
 import com.intellij.util.ui.JBUI
@@ -23,7 +24,7 @@ import org.java_websocket.client.WebSocketClient
 import org.java_websocket.handshake.ServerHandshake
 import org.json.JSONObject
 import java.awt.*
-import java.awt.event.ActionListener
+import java.awt.event.*
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
@@ -31,6 +32,7 @@ import java.net.HttpURLConnection
 import java.net.URI
 import java.net.URL
 import javax.swing.*
+import javax.swing.event.DocumentEvent
 import javax.swing.text.BadLocationException
 import javax.swing.text.Style
 import javax.swing.text.StyleConstants
@@ -70,12 +72,12 @@ class ChatWindow : ToolWindowFactory {
             val size = SwingUtilities.getRoot(component).size
             val width = size.width
             val height = size.height
-            val chatComponent = createToolWindowPanel(width, height, "Ollama", project, toolWindow)
+            val chatComponent = createToolWindowPanel(width, height, "Ollama", toolWindow)
             val chatContent = contentFactory.createContent(chatComponent, "Ollama", false)
             chatContent.icon = IconLoader.getIcon("/icons/ollama.svg", javaClass)
             toolWindow.contentManager.addContent(chatContent)
             if (settings.enabled) {
-                val wsComponent = createToolWindowPanel(width, height, "Copilot", project, toolWindow)
+                val wsComponent = createToolWindowPanel(width, height, "Copilot", toolWindow)
                 WsState.doradoContent = contentFactory.createContent(wsComponent, "Copilot", false)
                 WsState.doradoContent!!.icon = IconLoader.getIcon("/icons/off-dorado.svg", javaClass)
                 toolWindow.contentManager.addContent(WsState.doradoContent!!)
@@ -90,29 +92,11 @@ class ChatWindow : ToolWindowFactory {
 
     private fun createToolWindowPanel(
         width: Int, height: Int, displayName: String,
-        project: Project, toolWindow: ToolWindow
+        toolWindow: ToolWindow
     ): JPanel {
         val panel = JPanel(BorderLayout())
 
-        // 问题
-        val issuePane = JTextPane()
-        issuePane.name = "issue"
-        issuePane.contentType = "text/html"
-        issuePane.editorKit = HTMLEditorKit()
-        issuePane.isEditable = false
-        val issuePaneFont: Font = issuePane.font
-        issuePane.font = issuePaneFont.deriveFont(14f);
-        issuePane.text = "Ask me anything..."
-        issuePane.setMargin(JBUI.insets(10, 5));
-        val scrollIssuePanePane = JBScrollPane(issuePane)
-        scrollIssuePanePane.horizontalScrollBarPolicy = JScrollPane.HORIZONTAL_SCROLLBAR_NEVER;
-        scrollIssuePanePane.verticalScrollBarPolicy = JScrollPane.VERTICAL_SCROLLBAR_ALWAYS;
-        scrollIssuePanePane.border = BorderFactory.createMatteBorder(0, 0, 1, 0, Color.decode("#dee0e3"))
-        if (displayName == "Ollama") {
-            // panel.add(scrollIssuePanePane, BorderLayout.NORTH)
-        }
-
-        // 解释
+        // 输出面板
         val textPane = JTextPane()
         val textPanePreferredSize = Dimension(width, (height * 0.8).toInt())
         textPane.name = "out"
@@ -124,42 +108,84 @@ class ChatWindow : ToolWindowFactory {
         textPane.margin = JBUI.insets(8, 5);
         textPane.size = textPanePreferredSize
         textPane.preferredSize = textPanePreferredSize
+        textPane.isDoubleBuffered = true
         val scrollPane = JBScrollPane(textPane)
         scrollPane.isDoubleBuffered = true
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
-
-//        // 获取EditorFactory实例
-//        val editorFactory = EditorFactory.getInstance()
-//        // 创建一个Document对象，用于保存编辑器中的文本内容
-//        val document = editorFactory.createDocument("")
-//        // 创建编辑器
-//        val editor = editorFactory.createEditor(document)
-//        // 在Document中设置文本内容
-//        editor.document.setText("Hello, Kotlin!")
-//        scrollPane.add(editor.component)
-
         panel.add(scrollPane, BorderLayout.CENTER)
 
-        // 输入
-        val jTextField = JTextField(38)
-        jTextField.setBackground(ColorUtil.fromHex("#ff000000"))
-        jTextField.setBorder(BorderFactory.createEmptyBorder())
-        // 提交按钮
-        val submitButton = JButton(IconLoader.getIcon("/icons/send.svg", javaClass));
-        submitButton.setContentAreaFilled(false);
-        submitButton.setBorder(BorderFactory.createEmptyBorder())
-        submitButton.preferredSize = Dimension(40, 28) // 宽度为100像素，高度为50像素
+        // 输入面板
+        val input = JBTextArea()
+        val sendPanel = JPanel(FlowLayout(8,10,10))
+        val inputPanel = JPanel(BorderLayout())
+        val icon = Icons.Send
+        val sendBtn: JButton = Util.createIconButton(icon)
+        sendBtn.addActionListener {
+            try {
+                val text: String = input.text.replace("\n", "\n\n")
+                if (displayName == "Ollama") {
+                    submit(textPane, text, panel, sendPanel, input, sendBtn)
+                } else {
+                    sendMessage(sendPanel, input, textPane)
+                }
+            } finally {
+                input.text = ""
+            }
+        }
+        sendBtn.setCursor(Cursor(Cursor.HAND_CURSOR))
+        sendBtn.setEnabled(false)
+        inputPanel.isOpaque = false
+        inputPanel.add(input, BorderLayout.CENTER)
+        sendPanel.add(sendBtn)
+        input.isDoubleBuffered = true
+        input.font = input.font.deriveFont(14f);
+        input.document.addDocumentListener(Util.getDocumentAdapter(sendPanel))
+        input.isOpaque = false
+        // input.setBackground(Util.BACKGROUND_COLOR)
+        input.setLineWrap(true)
+        input.setWrapStyleWord(true)
+        input.getEmptyText().setText("Ask me anything...")
+        input.setBorder(JBUI.Borders.empty(8, 4))
+        Util.addShiftEnterInputMap(input, object : AbstractAction() {
+            override fun actionPerformed(e: ActionEvent) {
+                try {
+                    val text: String = input.text.replace("\n", "\n\n")
+                    if (displayName == "Ollama") {
+                        submit(textPane, text, panel, sendPanel, input, sendBtn)
+                    } else {
+                        sendMessage(sendPanel, input, textPane)
+                    }
+                } finally {
+                    input.text = ""
+                }
+            }
+        })
+        input.addFocusListener(object : FocusListener {
+            override fun focusGained(e: FocusEvent) {
+                Util.paintBorder(panel.graphics,input)
+                if(input.text.isEmpty()) {
+                    sendBtn.isEnabled = false
+                }
+            }
 
-        // 输入文本框 Pane
-        val buttonPanel = JPanel()
-        buttonPanel.setLayout(BorderLayout())
-        // buttonPanel.setBorder(RoundBorder(10));
-        buttonPanel.setBorder(BorderFactory.createMatteBorder(1, 0, 1, 0, Color.decode("#dee0e3")))
-        buttonPanel.add(jTextField, BorderLayout.WEST)
-        buttonPanel.add(submitButton, BorderLayout.EAST)
-        buttonPanel.preferredSize = Dimension(Int.MAX_VALUE, 40)
+            override fun focusLost(e: FocusEvent) {
+                Util.paintBorder(panel.graphics,input)
+                if(input.text.isEmpty()) {
+                    sendBtn.isEnabled = false
+                }
+            }
+        })
+        input.document.addDocumentListener(object : DocumentAdapter() {
+            override fun textChanged(e: DocumentEvent) {
+                sendBtn.isEnabled = true
+            }
+        })
 
-        // 工具Panel
+        // ###############################################################
+        inputPanel.add(sendPanel, BorderLayout.EAST)
+
+
+        // 下拉选择 Panel
         val toolPanel = JPanel()
         toolPanel.setLayout(BorderLayout())
         toolPanel.minimumSize = Dimension(Int.MAX_VALUE, 46)
@@ -172,72 +198,39 @@ class ChatWindow : ToolWindowFactory {
         val modelList = ComboBox(ll)
         modelList.selectedItem = settings.model
         modelList.preferredSize = Dimension(100, 35)
-        // modelList.setBackground(ColorUtil.fromHex("#ff000000"))
-        // modelList.setBorder(BorderFactory.createEmptyBorder())
         modelList.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, JBColor.WHITE))
         toolPanel.add(modelList, BorderLayout.EAST)
         modelList.addActionListener {
             settings.model = modelList.getItemAt(modelList.getSelectedIndex())
         }
-
-
-        val downPanel = JPanel()
-        downPanel.setLayout(BorderLayout())//上下布局
-
+        val inputBoxPanel = JPanel()
+        inputBoxPanel.setLayout(BorderLayout())//上下布局
         if (displayName == "Ollama") {
-            downPanel.add(toolPanel, BorderLayout.NORTH)//上
+            inputBoxPanel.add(toolPanel, BorderLayout.NORTH)//上
         }
-
-        downPanel.add(buttonPanel, BorderLayout.SOUTH)//下
-        panel.add(downPanel, BorderLayout.SOUTH)
+        inputBoxPanel.add(inputPanel, BorderLayout.SOUTH)//下
+        panel.add(inputBoxPanel, BorderLayout.SOUTH)
 
         if (displayName == "Copilot") {
             WsState.wsTimer = Timer(500, ActionListener {
                 counts += 1
                 val flag = counts % 2
                 if (flag == 1) {
-                    submitButton.setEnabled(true);
-                    submitButton.icon = IconLoader.getIcon("/icons/send.svg", javaClass)
+                    sendBtn.setEnabled(true);
                 } else {
-                    submitButton.setEnabled(false);
-                    submitButton.icon = IconLoader.getIcon("/icons/dis-send.svg", javaClass)
+                    sendBtn.setEnabled(false);
                 }
             })
             WsState.wsClient =
                 connectWs(
                     textPane,
-                    submitButton,
-                    buttonPanel,
-                    jTextField,
+                    sendBtn,
+                    sendPanel,
+                    input,
                     WsState.wsTimer!!,
                     scrollPane,
-                    project,
                     toolWindow,
                 )
-        }
-
-        // 添加回车事件监听器
-        jTextField.addActionListener { // 在这里处理回车事件的逻辑
-            issuePane.text = jTextField.text
-            if (displayName == "Ollama") {
-                submit(textPane, jTextField.text, panel, submitButton, buttonPanel, jTextField)
-            } else {
-                // textPane.text = ""
-                sendMessage(buttonPanel, jTextField, textPane)
-            }
-            jTextField.text = ""
-        }
-
-        // 按钮事件
-        submitButton.addActionListener {
-            issuePane.text = jTextField.text
-            if (displayName == "Ollama") {
-                submit(textPane, jTextField.text, panel, submitButton, buttonPanel, jTextField)
-            } else {
-                // textPane.text = ""
-                sendMessage(buttonPanel, jTextField, textPane)
-            }
-            jTextField.text = ""
         }
 
         return panel
@@ -245,9 +238,10 @@ class ChatWindow : ToolWindowFactory {
 
     private fun sendMessage(
         buttonPanel: JPanel,
-        jTextField: JTextField,
+        input: JBTextArea,
         outPanel: JTextPane,
     ) {
+        val text: String = input.text.replace("\n", "\n\n")
         val doc = outPanel.styledDocument
         val style: Style = doc.addStyle("default", null)
         StyleConstants.setFontSize(style, 12);
@@ -256,7 +250,7 @@ class ChatWindow : ToolWindowFactory {
             val htmlContent = """
                 <html>
                     <body>
-                        <div style="border:'1px solid #dee0e3';border-radius:'10px';padding:'8px';background:'#dee0e3';">${jTextField.text}</div>
+                        <div style="border:'1px solid #dee0e3';border-radius:'10px';padding:'8px';background:'#dee0e3';">${text}</div>
                         <br>
                     </body>
                 </html>
@@ -267,16 +261,20 @@ class ChatWindow : ToolWindowFactory {
         }
 
         buttonPanel.setEnabled(false)
-        jTextField.setEnabled(false);
+        input.setEnabled(false);
         if (!WsState.wsTimer?.isRunning!!) {
             WsState.wsTimer!!.start()
         }
-        val mes = parseMessage(jTextField.text)
+        val mes = parseMessage(text)
         WsState.wsClient?.send(mes)
     }
 
     companion object {
 
+        /**
+         *
+         * Copilot Data PareCovert
+         */
         @JvmStatic
         fun parseMessage(prompt: String): String {
 
@@ -312,11 +310,15 @@ class ChatWindow : ToolWindowFactory {
             return messagesObject.toString()
         }
 
+        /**
+         *
+         * ollama send message
+         */
         @JvmStatic
         fun send(
             panel: JPanel,
             buttonPanel: JPanel,
-            jTextField: JTextField,
+            jTextField: JComponent,
             message: String,
             outPanel: JTextPane
         ) {
@@ -354,7 +356,11 @@ class ChatWindow : ToolWindowFactory {
     }
 
 
-    private fun setStatus(project: Project, toolWindow: ToolWindow, status: String) {
+    /**
+     *
+     * Set Connection Copilot Status
+     */
+    private fun setStatus(toolWindow: ToolWindow, status: String) {
         var ico = "/icons/app-icon-off.svg"
         if (status == "Success") {
             ico = "/icons/app-icon-online.svg"
@@ -368,14 +374,17 @@ class ChatWindow : ToolWindowFactory {
     }
 
 
+    /**
+     *
+     * Connection Copilot
+     */
     private fun connectWs(
         textPane: JTextPane,
         submitButton: JButton,
         buttonPanel: JPanel,
-        jTextField: JTextField,
+        jTextField: Component,
         timer: Timer,
         scrollPane: JBScrollPane,
-        project: Project,
         toolWindow: ToolWindow
     ): WebSocketClient {
 
@@ -384,7 +393,7 @@ class ChatWindow : ToolWindowFactory {
             override fun onOpen(handshakedata: ServerHandshake?) {
                 println("WebSocketClient Connect Success")
                 WsState.doradoContent!!.icon = IconLoader.getIcon("/icons/dorado.svg", javaClass)
-                setStatus(project, toolWindow, "Success")
+                setStatus(toolWindow, "Success")
             }
 
             override fun onMessage(message: String?) {
@@ -402,7 +411,6 @@ class ChatWindow : ToolWindowFactory {
                     submitButton.setEnabled(true);
                     if (timer.isRunning) {
                         timer.stop()
-                        submitButton.icon = IconLoader.getIcon("/icons/send.svg", javaClass)
                     }
                 }
                 if (content.has("part")) {
@@ -412,11 +420,10 @@ class ChatWindow : ToolWindowFactory {
 
             override fun onClose(code: Int, reason: String?, remote: Boolean) {
                 WsState.doradoContent!!.icon = IconLoader.getIcon("/icons/dorado.svg", javaClass)
-                setStatus(project, toolWindow, "Closed")
+                setStatus(toolWindow, "Closed")
                 println("WebSocketClient Connect onClose:$reason")
                 if (timer.isRunning) {
                     timer.stop()
-                    submitButton.icon = IconLoader.getIcon("/icons/send.svg", javaClass)
                 }
                 jTextField.setEnabled(true);
                 buttonPanel.setEnabled(true)
@@ -426,10 +433,9 @@ class ChatWindow : ToolWindowFactory {
             override fun onError(ex: java.lang.Exception?) {
                 println("WebSocketClient Connect onError:${ex?.stackTraceToString()}")
                 WsState.doradoContent!!.icon = IconLoader.getIcon("/icons/dorado.svg", javaClass)
-                setStatus(project, toolWindow, "Exception")
+                setStatus(toolWindow, "Exception")
                 if (timer.isRunning) {
                     timer.stop()
-                    submitButton.icon = IconLoader.getIcon("/icons/send.svg", javaClass)
                 }
                 jTextField.setEnabled(true);
                 buttonPanel.setEnabled(true)
@@ -441,17 +447,20 @@ class ChatWindow : ToolWindowFactory {
     }
 
 
-    //    https://github.com/ollama/ollama/blob/main/docs/api.md
+    /**
+     *
+     * https://github.com/ollama/ollama/blob/main/docs/api.md
+     */
     fun submit(
         textPane: JTextPane,
         inputText: String,
         panel: JPanel,
-        submitButton: JButton,
-        buttonPanel: JPanel,
-        jTextField: JTextField
+        sendPanel: JPanel,
+        inputPanel: JComponent,
+        sendBtn: JButton
     ) {
-        buttonPanel.setEnabled(false)
-        jTextField.setEnabled(false);
+        sendPanel.setEnabled(false)
+        inputPanel.setEnabled(false);
         var counts = 0
         // 创建一个定时器，用于模拟加载过程
         val timer = Timer(500, ActionListener {
@@ -460,11 +469,9 @@ class ChatWindow : ToolWindowFactory {
             //submitButton.isVisible = !submitButton.isVisible
             val flag = counts % 2
             if (flag == 1) {
-                submitButton.setEnabled(true);
-                submitButton.icon = IconLoader.getIcon("/icons/send.svg", javaClass)
+                sendBtn.setEnabled(true);
             } else {
-                submitButton.setEnabled(false);
-                submitButton.icon = IconLoader.getIcon("/icons/dis-send.svg", javaClass)
+                sendBtn.setEnabled(false);
             }
         })
 
@@ -476,6 +483,19 @@ class ChatWindow : ToolWindowFactory {
         // 创建并执行后台任务
         val doc = textPane.styledDocument
         val style: Style = doc.addStyle("default", null)
+
+        // 问题
+        val htmlKit = HTMLEditorKit()
+        try {
+            val htmlContent =
+                """<html><body><div style="border:'1px solid #dee0e3';border-radius:'10px';padding:'8px';background:'#dee0e3';">$inputText</div>
+                                                 <br></body></html>
+                                             """.trimIndent()
+            htmlKit.insertHTML(doc as HTMLDocument, doc.length, htmlContent, 0, 0, null)
+        } catch (ex: BadLocationException) {
+            ex.printStackTrace()
+        }
+
         StyleConstants.setFontSize(style, 10);
         val settings: CodeAssistantSettingsState = CodeAssistantSettingsState.getInstance()
         val messagesObject = JsonObject()
@@ -511,16 +531,6 @@ class ChatWindow : ToolWindowFactory {
                     val responseCode = connection.responseCode
                     if (responseCode == HttpURLConnection.HTTP_OK) {
                         //publish("begin ++++++++++++++++++++++ Ollama: $inputText ++++++++++++++++++++ \r\n\n")
-                        val htmlKit = HTMLEditorKit()
-                        try {
-                            val htmlContent =
-                                """<html><body><div style="border:'1px solid #dee0e3';border-radius:'10px';padding:'8px';background:'#dee0e3';">$inputText</div>
-                                                 <br></body></html>
-                                             """.trimIndent()
-                            htmlKit.insertHTML(doc as HTMLDocument, doc.length, htmlContent, 0, 0, null)
-                        } catch (ex: BadLocationException) {
-                            ex.printStackTrace()
-                        }
                         val inputStream = connection.inputStream
                         val reader = BufferedReader(InputStreamReader(inputStream, "utf-8"))
                         var line: String?
@@ -530,13 +540,11 @@ class ChatWindow : ToolWindowFactory {
                             val context = jsonObject.get("message").asJsonObject.get("content").asString
                             publish(context)
                             if (jsonObject.get("done").asBoolean) {
-                                jTextField.setEnabled(true);
-                                buttonPanel.setEnabled(true)
-                                submitButton.setEnabled(true);
+                                inputPanel.setEnabled(true);
+                                sendBtn.setEnabled(true)
                                 publish("\r\n\n\n\n\n")
                                 if (timer.isRunning) {
                                     timer.stop()
-                                    submitButton.icon = IconLoader.getIcon("/icons/send.svg", javaClass)
                                 }
                             }
                         }
@@ -544,21 +552,17 @@ class ChatWindow : ToolWindowFactory {
                     } else {
                         if (timer.isRunning) {
                             timer.stop()
-                            submitButton.icon = IconLoader.getIcon("/icons/send.svg", javaClass)
                         }
-                        jTextField.setEnabled(true);
-                        buttonPanel.setEnabled(true)
-                        submitButton.setEnabled(true);
+                        inputPanel.setEnabled(true);
+                        sendBtn.setEnabled(true)
                         JOptionPane.showMessageDialog(panel, "Request Failed：${connection.responseMessage}")
                     }
                 } catch (ex: Exception) {
                     if (timer.isRunning) {
                         timer.stop()
-                        submitButton.icon = IconLoader.getIcon("/icons/send.svg", javaClass)
                     }
-                    jTextField.setEnabled(true);
-                    buttonPanel.setEnabled(true)
-                    submitButton.setEnabled(true);
+                    inputPanel.setEnabled(true);
+                    sendBtn.setEnabled(true)
                     println(ex.localizedMessage)
                     JOptionPane.showMessageDialog(panel, "Request Exception：${ex.localizedMessage}")
                 }

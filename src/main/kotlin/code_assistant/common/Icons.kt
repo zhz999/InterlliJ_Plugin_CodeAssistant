@@ -18,6 +18,8 @@ object Icons {
     val MessageError = IconLoader.getIcon("/icons/message-error-icon.svg", javaClass)
     @JvmField
     val DefaultSmall = IconLoader.getIcon("/icons/app-icon-online.svg", javaClass)
+    @JvmField
+    val Send = IconLoader.getIcon("/icons/send.svg", javaClass)
 }
 
 
