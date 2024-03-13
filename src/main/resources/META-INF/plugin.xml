@@ -76,8 +76,18 @@
             <override-text place="popup" use-text-of-place="MainMenu"/>
         </action>
 
+        <action
+                id="StatusBar.ReconCopilot"
+                icon="code_assistant.common.Icons.DefaultSmall"
+                text="Copilot 重连"
+                class="code_assistant.settings.ReCopilotAction">
+            <override-text place="MainMenu" text="Copilot 重连"/>
+            <override-text place="popup" use-text-of-place="MainMenu"/>
+        </action>
+
         <group id="StatusBar.statusBarPopup">
             <reference id="StatusBar.openSettings"/>
+            <reference id="StatusBar.ReconCopilot"/>
         </group>
 
         <group id="CodeAssistEditorTool"

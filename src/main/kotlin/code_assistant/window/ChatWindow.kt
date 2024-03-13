@@ -3,10 +3,14 @@ package code_assistant.window
 import code_assistant.common.Icons
 import code_assistant.common.Message
 import code_assistant.settings.CodeAssistantSettingsState
+import com.github.weisj.jsvg.x
 import com.google.gson.Gson
 import com.google.gson.JsonObject
+import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.actionSystem.DefaultActionGroup
 import com.intellij.openapi.application.Application
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.project.DumbAwareAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.openapi.ui.Messages
@@ -38,6 +42,7 @@ import javax.swing.text.Style
 import javax.swing.text.StyleConstants
 import javax.swing.text.html.HTMLDocument
 import javax.swing.text.html.HTMLEditorKit
+
 
 /**
  *
@@ -82,8 +87,6 @@ class ChatWindow : ToolWindowFactory {
                 WsState.doradoContent!!.icon = IconLoader.getIcon("/icons/off-dorado.svg", javaClass)
                 toolWindow.contentManager.addContent(WsState.doradoContent!!)
             }
-
-
         } catch (e: IOException) {
             Messages.showErrorDialog(project, e.stackTraceToString(), "打开插件失败")
         }
@@ -271,6 +274,10 @@ class ChatWindow : ToolWindowFactory {
     }
 
     companion object {
+
+        fun reCopilot(){
+            WsState.wsClient?.reconnect()
+        }
 
         /**
          *
