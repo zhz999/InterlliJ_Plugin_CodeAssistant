@@ -9,7 +9,7 @@ import com.intellij.openapi.options.ShowSettingsUtil
 class ReCopilotAction : AnAction(
     "Copilot 重连",
     "Copilot 重连",
-    AllIcons.General.Settings
+    null
 ) {
     override fun actionPerformed(e: AnActionEvent) {
         ChatWindow.reCopilot()

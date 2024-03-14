@@ -1,4 +1,4 @@
-package code_assistant.statusbar
+package code_assistant.statusbar.copilot
 
 import com.intellij.openapi.actionSystem.ActionGroup
 import com.intellij.openapi.actionSystem.ActionManager
@@ -10,24 +10,36 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.wm.StatusBarWidget
 import com.intellij.openapi.wm.impl.status.EditorBasedStatusBarPopup
 import code_assistant.common.Icons
+import code_assistant.settings.CodeAssistantSettingsState
+import code_assistant.tool.Bundle
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.ui.content.Content
+import org.java_websocket.client.WebSocketClient
+import javax.swing.Timer
 
-class CodeStatusBarWidget(project: Project) : EditorBasedStatusBarPopup(project, false) {
+class CopilotStatusBarWidget(project: Project) : EditorBasedStatusBarPopup(project, false) {
+
+    object WidgetStates {
+        @JvmStatic
+        @Volatile
+        var icon = Icons.Disabled
+    }
 
     override fun ID(): String {
-        return "code_assistant.statusbar.widget";
+        return Bundle.message("copilot.id", "");
     }
 
     override fun getWidgetState(file: VirtualFile?): WidgetState {
-        val state = WidgetState("开发助手", "", true);
-        state.icon = Icons.DefaultSmall;
+        val state = WidgetState(Bundle.message("copilot.name", ""), " " + Bundle.message("copilot.name", ""), true);
+        state.icon = WidgetStates.icon;
         return state;
     }
 
     override fun createPopup(context: DataContext): ListPopup {
-        val actionGroup = ActionManager.getInstance().getAction("StatusBar.statusBarPopup")
+        val actionGroup = ActionManager.getInstance().getAction("StatusBar.CopilotStatusBarPopup")
         return JBPopupFactory.getInstance()
             .createActionGroupPopup(
-                "开发助手",
+                "",
                 actionGroup as ActionGroup,
                 context,
                 JBPopupFactory.ActionSelectionAid.SPEEDSEARCH,
@@ -36,6 +48,8 @@ class CodeStatusBarWidget(project: Project) : EditorBasedStatusBarPopup(project,
     }
 
     override fun createInstance(project: Project): StatusBarWidget {
-        return CodeStatusBarWidget(project);
+        return CopilotStatusBarWidget(project);
     }
+
+
 }

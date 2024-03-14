@@ -3,6 +3,7 @@ package code_assistant.window
 import code_assistant.common.Icons
 import code_assistant.common.Message
 import code_assistant.settings.CodeAssistantSettingsState
+import code_assistant.statusbar.copilot.CopilotStatusBarWidget
 import com.github.weisj.jsvg.x
 import com.google.gson.Gson
 import com.google.gson.JsonObject
@@ -67,6 +68,10 @@ class ChatWindow : ToolWindowFactory {
 
         @JvmStatic
         @Volatile
+        var wsPingTimer: Timer? = null
+
+        @JvmStatic
+        @Volatile
         var doradoContent: Content? = null
     }
 
@@ -119,7 +124,7 @@ class ChatWindow : ToolWindowFactory {
 
         // 输入面板
         val input = JBTextArea()
-        val sendPanel = JPanel(FlowLayout(8,10,10))
+        val sendPanel = JPanel(FlowLayout(8, 10, 10))
         val inputPanel = JPanel(BorderLayout())
         val icon = Icons.Send
         val sendBtn: JButton = Util.createIconButton(icon)
@@ -165,15 +170,15 @@ class ChatWindow : ToolWindowFactory {
         })
         input.addFocusListener(object : FocusListener {
             override fun focusGained(e: FocusEvent) {
-                Util.paintBorder(panel.graphics,input)
-                if(input.text.isEmpty()) {
+                Util.paintBorder(panel.graphics, input)
+                if (input.text.isEmpty()) {
                     sendBtn.isEnabled = false
                 }
             }
 
             override fun focusLost(e: FocusEvent) {
-                Util.paintBorder(panel.graphics,input)
-                if(input.text.isEmpty()) {
+                Util.paintBorder(panel.graphics, input)
+                if (input.text.isEmpty()) {
                     sendBtn.isEnabled = false
                 }
             }
@@ -225,16 +230,15 @@ class ChatWindow : ToolWindowFactory {
                     sendBtn.setEnabled(false);
                 }
             })
-            WsState.wsClient =
-                connectWs(
-                    textPane,
-                    sendBtn,
-                    sendPanel,
-                    input,
-                    WsState.wsTimer!!,
-                    scrollPane,
-                    toolWindow,
-                )
+            connectWs(
+                textPane,
+                sendBtn,
+                sendPanel,
+                input,
+                WsState.wsTimer!!,
+                scrollPane,
+                toolWindow,
+            )
         }
 
         return panel
@@ -275,7 +279,7 @@ class ChatWindow : ToolWindowFactory {
 
     companion object {
 
-        fun reCopilot(){
+        fun reCopilot() {
             WsState.wsClient?.reconnect()
         }
 
@@ -369,16 +373,18 @@ class ChatWindow : ToolWindowFactory {
      * Set Connection Copilot Status
      */
     private fun setStatus(toolWindow: ToolWindow, status: String) {
-        var ico = "/icons/app-icon-off.svg"
+        // var ico = "/icons/app-icon-off.svg"
         if (status == "Success") {
-            ico = "/icons/app-icon-online.svg"
+            // ico = "/icons/app-icon-online.svg"
             Message.Info("Copilot Is Ready OK!")
+            CopilotStatusBarWidget.WidgetStates.icon = Icons.Running
         } else {
             Message.Error("Copilot Is Ready Failed : $status")
+            CopilotStatusBarWidget.WidgetStates.icon = Icons.Disabled
         }
-        val icon: Icon = IconLoader.getIcon(ico, javaClass)
-        val application: Application = ApplicationManager.getApplication()
-        application.invokeLater { toolWindow.setIcon(icon) }
+        //val icon: Icon = IconLoader.getIcon(ico, javaClass)
+        //val application: Application = ApplicationManager.getApplication()
+        //application.invokeLater { toolWindow.setIcon(icon) }
     }
 
 
@@ -394,7 +400,15 @@ class ChatWindow : ToolWindowFactory {
         timer: Timer,
         scrollPane: JBScrollPane,
         toolWindow: ToolWindow
-    ): WebSocketClient {
+    ) {
+        val settings = CodeAssistantSettingsState.getInstance()
+
+        if (WsState.wsPingTimer == null) {
+            // 创建一个定时器，用于发送ping
+            WsState.wsPingTimer = Timer(3000, ActionListener {
+                WsState.wsClient?.sendPing()
+            })
+        }
 
         val wsClient: WebSocketClient = object :
             WebSocketClient(URI("wss://data.bytedance.net/socket-dorado/copilot/v1/socket?token=" + settings.token)) {
@@ -402,6 +416,11 @@ class ChatWindow : ToolWindowFactory {
                 println("WebSocketClient Connect Success")
                 WsState.doradoContent!!.icon = IconLoader.getIcon("/icons/dorado.svg", javaClass)
                 setStatus(toolWindow, "Success")
+                WsState.wsClient = this
+                // 启动或停止定时器
+                if (!WsState.wsPingTimer!!.isRunning) {
+                    WsState.wsPingTimer!!.start()
+                }
             }
 
             override fun onMessage(message: String?) {
@@ -413,6 +432,7 @@ class ChatWindow : ToolWindowFactory {
                 println(message)
                 val content = JSONObject(message).getJSONObject("result").getJSONObject("content")
                 if (content.has("type") && content.getString("type") == "answer_end") {
+                    doc.insertString(doc.length, "\n\n\n\n\n", style);
                     println("=========== answer_end")
                     jTextField.setEnabled(true);
                     buttonPanel.setEnabled(true)
@@ -433,6 +453,10 @@ class ChatWindow : ToolWindowFactory {
                 if (timer.isRunning) {
                     timer.stop()
                 }
+                // 启动或停止定时器
+                if (WsState.wsPingTimer!!.isRunning) {
+                    WsState.wsPingTimer!!.stop()
+                }
                 jTextField.setEnabled(true);
                 buttonPanel.setEnabled(true)
                 submitButton.setEnabled(true);
@@ -445,13 +469,16 @@ class ChatWindow : ToolWindowFactory {
                 if (timer.isRunning) {
                     timer.stop()
                 }
+                // 启动或停止定时器
+                if (WsState.wsPingTimer!!.isRunning) {
+                    WsState.wsPingTimer!!.stop()
+                }
                 jTextField.setEnabled(true);
                 buttonPanel.setEnabled(true)
                 submitButton.setEnabled(true);
             }
         }
         wsClient.connect()
-        return wsClient
     }
 
 

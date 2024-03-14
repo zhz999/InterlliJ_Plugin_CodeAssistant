@@ -11,13 +11,18 @@ import com.intellij.openapi.util.IconLoader
 
 object Icons {
     @JvmField
+    val Disabled = IconLoader.getIcon("/icons/running-3.svg", javaClass)
+    @JvmField
+    val Running = IconLoader.getIcon("/icons/running-2.svg", javaClass)
+
+    @JvmField
     val MessageInfo = IconLoader.getIcon("/icons/message-info-icon.svg", javaClass)
     @JvmField
     val MessageWarn = IconLoader.getIcon("/icons/message-warn-icon.svg", javaClass)
     @JvmField
     val MessageError = IconLoader.getIcon("/icons/message-error-icon.svg", javaClass)
     @JvmField
-    val DefaultSmall = IconLoader.getIcon("/icons/app-icon-online.svg", javaClass)
+    val DefaultSmall = IconLoader.getIcon("/icons/app-icon-off.svg", javaClass)
     @JvmField
     val Send = IconLoader.getIcon("/icons/send.svg", javaClass)
 }

@@ -37,8 +37,13 @@
 
         <statusBarWidgetFactory
                 order="first"
-                id="dev.statusbar.widget"
+                id="code_assistant.statusbar.widget"
                 implementation="code_assistant.statusbar.CodeStatusBarWidgetFactory"/>
+
+        <statusBarWidgetFactory
+                order="first"
+                id="code_assistant.statusbar.widget.copilot"
+                implementation="code_assistant.statusbar.copilot.CopilotStatusBarWidgetFactory"/>
 
         <applicationConfigurable
                 id="settings.code_assistant"
@@ -69,7 +74,6 @@
 
         <action
                 id="StatusBar.openSettings"
-                icon="code_assistant.common.Icons.DefaultSmall"
                 text="Open Settings"
                 class="code_assistant.settings.OpenSettingsAction">
             <override-text place="MainMenu" text="Open Settings"/>
@@ -78,7 +82,6 @@
 
         <action
                 id="StatusBar.ReconCopilot"
-                icon="code_assistant.common.Icons.DefaultSmall"
                 text="Copilot 重连"
                 class="code_assistant.settings.ReCopilotAction">
             <override-text place="MainMenu" text="Copilot 重连"/>
@@ -87,6 +90,10 @@
 
         <group id="StatusBar.statusBarPopup">
             <reference id="StatusBar.openSettings"/>
+        </group>
+
+
+        <group id="StatusBar.CopilotStatusBarPopup">
             <reference id="StatusBar.ReconCopilot"/>
         </group>
 

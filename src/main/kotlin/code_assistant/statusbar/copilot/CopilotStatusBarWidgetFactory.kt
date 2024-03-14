@@ -1,22 +1,23 @@
-package code_assistant.statusbar
+package code_assistant.statusbar.copilot
 
+import code_assistant.tool.Bundle
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.wm.StatusBarWidget
 import com.intellij.openapi.wm.impl.status.widget.StatusBarEditorBasedWidgetFactory
 
-class CodeStatusBarWidgetFactory : StatusBarEditorBasedWidgetFactory() {
+class CopilotStatusBarWidgetFactory : StatusBarEditorBasedWidgetFactory() {
 
   override fun getId(): String {
-    return "code_assistant.statusbar.widget";
+    return Bundle.message("copilot.id","");
   }
 
   override fun getDisplayName(): String {
-    return "开发助手"
+    return Bundle.message("copilot.name","");
   }
 
   override fun createWidget(project: Project): StatusBarWidget {
-    return CodeStatusBarWidget(project);
+    return CopilotStatusBarWidget(project);
   }
 
   override fun disposeWidget(widget: StatusBarWidget) {
