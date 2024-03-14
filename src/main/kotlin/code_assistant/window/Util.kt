@@ -1,17 +1,36 @@
 package code_assistant.window
 
+import code_assistant.common.Icons
+import code_assistant.common.Message
+import code_assistant.statusbar.copilot.CopilotStatusBarWidget
+import code_assistant.statusbar.copilot.CopilotStatusBarWidgetFactory
+import code_assistant.tool.Bundle
+import com.intellij.openapi.wm.WindowManager
 import com.intellij.ui.DocumentAdapter
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBTextArea
+import com.intellij.ui.content.Content
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.UIUtil
+import org.java_websocket.client.WebSocketClient
 import java.awt.*
+import java.awt.event.ActionListener
 import javax.swing.*
 import javax.swing.event.DocumentEvent
 
 class Util {
 
+    object UtilState {
+
+        @JvmStatic
+        @Volatile
+        var RunningTimer: Timer? = null
+
+    }
+
     companion object {
+
+        private var counts = 0
 
         private const val textAreaRadius = 16
 
@@ -53,6 +72,34 @@ class Util {
         }
 
 
+        fun start(button: JButton) {
+            if (UtilState.RunningTimer == null) {
+                counts = 0
+                UtilState.RunningTimer = Timer(300, ActionListener {
+                    counts += 1
+                    val flag = counts % 2
+                    if (flag == 1) {
+                        button.icon = Icons.Step1
+                    } else {
+                        button.icon = Icons.Step2
+                    }
+                })
+                UtilState.RunningTimer?.start()
+            } else {
+                counts = 0
+                if (UtilState.RunningTimer?.isRunning == false) {
+                    UtilState.RunningTimer?.start()
+                }
+            }
+        }
+
+        fun stop(button: JButton) {
+            counts = 0
+            if (UtilState.RunningTimer?.isRunning == true) {
+                UtilState.RunningTimer?.stop()
+            }
+            button.icon = Icons.Send
+        }
 
     }
 

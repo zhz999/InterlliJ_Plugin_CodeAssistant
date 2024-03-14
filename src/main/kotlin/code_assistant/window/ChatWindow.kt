@@ -24,6 +24,8 @@ import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextArea
 import com.intellij.ui.content.Content
 import com.intellij.ui.content.ContentFactory
+import com.intellij.ui.content.ContentManagerEvent
+import com.intellij.ui.content.ContentManagerListener
 import com.intellij.util.ui.JBUI
 import org.java_websocket.client.WebSocketClient
 import org.java_websocket.handshake.ServerHandshake
@@ -58,6 +60,19 @@ class ChatWindow : ToolWindowFactory {
     private var counts = 0
 
     object WsState {
+
+        @JvmStatic
+        @Volatile
+        var isReconnect = false
+
+        @JvmStatic
+        @Volatile
+        var reTimer: Timer? = null
+
+        @JvmStatic
+        @Volatile
+        var wsToken: String = CodeAssistantSettingsState.getInstance().token
+
         @JvmStatic
         @Volatile
         var wsClient: WebSocketClient? = null
@@ -92,6 +107,43 @@ class ChatWindow : ToolWindowFactory {
                 WsState.doradoContent!!.icon = IconLoader.getIcon("/icons/off-dorado.svg", javaClass)
                 toolWindow.contentManager.addContent(WsState.doradoContent!!)
             }
+
+            WsState.reTimer = Timer(3000, ActionListener {
+                if (WsState.wsClient == null || WsState.wsClient?.isOpen == false) {
+                    WsState.isReconnect = true
+                    println("尝试重连")
+                    WsState.wsToken = CodeAssistantSettingsState.getInstance().token
+                    val Copilot = toolWindow.contentManager.findContent("Copilot")
+                    // 先移除销毁掉原来的Context
+                    if (Copilot !== null) toolWindow.contentManager.removeContent(Copilot, true)
+                    // 再重新创建新的Context
+                    val wsComponent = createToolWindowPanel(width, height, "Copilot", toolWindow)
+                    WsState.doradoContent = contentFactory.createContent(wsComponent, "Copilot", false)
+                    WsState.doradoContent!!.icon = IconLoader.getIcon("/icons/off-dorado.svg", javaClass)
+                    toolWindow.contentManager.addContent(WsState.doradoContent!!)
+                } else {
+                    WsState.isReconnect = false
+                    println("连接成功")
+                    WsState.reTimer?.stop()
+                }
+            })
+
+            // 监听选择Context
+            toolWindow.contentManager.addContentManagerListener(object : ContentManagerListener {
+                override fun selectionChanged(event: ContentManagerEvent) {
+                    if (settings.enabled) {
+                        // if (event.content.displayName == "Copilot") {
+                        if (WsState.wsClient == null || !WsState.wsClient!!.isOpen) {
+                            if (!WsState.reTimer!!.isRunning) {
+                                WsState.reTimer!!.start()
+                            }
+                        }
+                        // }
+                    }
+                }
+            })
+
+
         } catch (e: IOException) {
             Messages.showErrorDialog(project, e.stackTraceToString(), "打开插件失败")
         }
@@ -99,8 +151,7 @@ class ChatWindow : ToolWindowFactory {
 
 
     private fun createToolWindowPanel(
-        width: Int, height: Int, displayName: String,
-        toolWindow: ToolWindow
+        width: Int, height: Int, displayName: String, toolWindow: ToolWindow
     ): JPanel {
         val panel = JPanel(BorderLayout())
 
@@ -134,7 +185,7 @@ class ChatWindow : ToolWindowFactory {
                 if (displayName == "Ollama") {
                     submit(textPane, text, panel, sendPanel, input, sendBtn)
                 } else {
-                    sendMessage(sendPanel, input, textPane)
+                    sendMessage(sendPanel, input, textPane, sendBtn)
                 }
             } finally {
                 input.text = ""
@@ -161,7 +212,7 @@ class ChatWindow : ToolWindowFactory {
                     if (displayName == "Ollama") {
                         submit(textPane, text, panel, sendPanel, input, sendBtn)
                     } else {
-                        sendMessage(sendPanel, input, textPane)
+                        sendMessage(sendPanel, input, textPane, sendBtn)
                     }
                 } finally {
                     input.text = ""
@@ -225,9 +276,9 @@ class ChatWindow : ToolWindowFactory {
                 counts += 1
                 val flag = counts % 2
                 if (flag == 1) {
-                    sendBtn.setEnabled(true);
+                   // sendBtn.setEnabled(true);
                 } else {
-                    sendBtn.setEnabled(false);
+                   // sendBtn.setEnabled(false);
                 }
             })
             connectWs(
@@ -248,6 +299,7 @@ class ChatWindow : ToolWindowFactory {
         buttonPanel: JPanel,
         input: JBTextArea,
         outPanel: JTextPane,
+        button: JButton
     ) {
         val text: String = input.text.replace("\n", "\n\n")
         val doc = outPanel.styledDocument
@@ -267,12 +319,12 @@ class ChatWindow : ToolWindowFactory {
         } catch (ex: BadLocationException) {
             ex.printStackTrace()
         }
-
-        buttonPanel.setEnabled(false)
-        input.setEnabled(false);
+        //buttonPanel.setEnabled(false)
+        //input.setEnabled(false);
         if (!WsState.wsTimer?.isRunning!!) {
             WsState.wsTimer!!.start()
         }
+        Util.start(button)
         val mes = parseMessage(text)
         WsState.wsClient?.send(mes)
     }
@@ -280,7 +332,14 @@ class ChatWindow : ToolWindowFactory {
     companion object {
 
         fun reCopilot() {
-            WsState.wsClient?.reconnect()
+            val settings = CodeAssistantSettingsState.getInstance()
+            if (settings.enabled) {
+                if (WsState.wsClient == null || !WsState.wsClient!!.isOpen) {
+                    if (!WsState.reTimer!!.isRunning) {
+                        WsState.reTimer!!.start()
+                    }
+                }
+            }
         }
 
         /**
@@ -328,11 +387,7 @@ class ChatWindow : ToolWindowFactory {
          */
         @JvmStatic
         fun send(
-            panel: JPanel,
-            buttonPanel: JPanel,
-            jTextField: JComponent,
-            message: String,
-            outPanel: JTextPane
+            panel: JPanel, buttonPanel: JPanel, jTextField: JComponent, message: String, outPanel: JTextPane
         ) {
             val doc = outPanel.styledDocument
             val style: Style = doc.addStyle("default", null)
@@ -353,8 +408,8 @@ class ChatWindow : ToolWindowFactory {
             } catch (ex: BadLocationException) {
                 ex.printStackTrace()
             }
-            buttonPanel.setEnabled(false)
-            jTextField.setEnabled(false);
+            //buttonPanel.setEnabled(false)
+            //jTextField.setEnabled(false);
             if (!WsState.wsTimer?.isRunning!!) {
                 WsState.wsTimer!!.start()
             }
@@ -376,10 +431,14 @@ class ChatWindow : ToolWindowFactory {
         // var ico = "/icons/app-icon-off.svg"
         if (status == "Success") {
             // ico = "/icons/app-icon-online.svg"
-            Message.Info("Copilot Is Ready OK!")
+            if (!WsState.isReconnect) {
+                Message.Info("Copilot Is Ready OK!")
+            }
             CopilotStatusBarWidget.WidgetStates.icon = Icons.Running
         } else {
-            Message.Error("Copilot Is Ready Failed : $status")
+            if (!WsState.isReconnect) {
+                Message.Error("Copilot Is Ready Failed : $status")
+            }
             CopilotStatusBarWidget.WidgetStates.icon = Icons.Disabled
         }
         //val icon: Icon = IconLoader.getIcon(ico, javaClass)
@@ -401,7 +460,6 @@ class ChatWindow : ToolWindowFactory {
         scrollPane: JBScrollPane,
         toolWindow: ToolWindow
     ) {
-        val settings = CodeAssistantSettingsState.getInstance()
 
         if (WsState.wsPingTimer == null) {
             // 创建一个定时器，用于发送ping
@@ -410,8 +468,8 @@ class ChatWindow : ToolWindowFactory {
             })
         }
 
-        val wsClient: WebSocketClient = object :
-            WebSocketClient(URI("wss://data.bytedance.net/socket-dorado/copilot/v1/socket?token=" + settings.token)) {
+        WsState.wsClient = object :
+            WebSocketClient(URI("wss://data.bytedance.net/socket-dorado/copilot/v1/socket?token=" + WsState.wsToken)) {
             override fun onOpen(handshakedata: ServerHandshake?) {
                 println("WebSocketClient Connect Success")
                 WsState.doradoContent!!.icon = IconLoader.getIcon("/icons/dorado.svg", javaClass)
@@ -429,7 +487,7 @@ class ChatWindow : ToolWindowFactory {
                 verticalScrollBar.value = verticalScrollBar.maximum
                 val style: Style = doc.addStyle("default", null)
                 StyleConstants.setFontSize(style, 10);
-                println(message)
+                // println(message)
                 val content = JSONObject(message).getJSONObject("result").getJSONObject("content")
                 if (content.has("type") && content.getString("type") == "answer_end") {
                     doc.insertString(doc.length, "\n\n\n\n\n", style);
@@ -440,6 +498,7 @@ class ChatWindow : ToolWindowFactory {
                     if (timer.isRunning) {
                         timer.stop()
                     }
+                    Util.stop(submitButton)
                 }
                 if (content.has("part")) {
                     doc.insertString(doc.length, content.getString("part"), style);
@@ -478,7 +537,7 @@ class ChatWindow : ToolWindowFactory {
                 submitButton.setEnabled(true);
             }
         }
-        wsClient.connect()
+        (WsState.wsClient as WebSocketClient).connect()
     }
 
 
@@ -494,8 +553,8 @@ class ChatWindow : ToolWindowFactory {
         inputPanel: JComponent,
         sendBtn: JButton
     ) {
-        sendPanel.setEnabled(false)
-        inputPanel.setEnabled(false);
+        //sendPanel.setEnabled(false)
+        //inputPanel.setEnabled(false);
         var counts = 0
         // 创建一个定时器，用于模拟加载过程
         val timer = Timer(500, ActionListener {
@@ -504,9 +563,9 @@ class ChatWindow : ToolWindowFactory {
             //submitButton.isVisible = !submitButton.isVisible
             val flag = counts % 2
             if (flag == 1) {
-                sendBtn.setEnabled(true);
+                // sendBtn.setEnabled(true);
             } else {
-                sendBtn.setEnabled(false);
+                // sendBtn.setEnabled(false);
             }
         })
 
@@ -615,5 +674,6 @@ class ChatWindow : ToolWindowFactory {
 
 
 }
+
 
 

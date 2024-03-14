@@ -10,6 +10,15 @@ import com.intellij.openapi.util.IconLoader
  */
 
 object Icons {
+
+
+    @JvmField
+    val Done = IconLoader.getIcon("/icons/done.svg", javaClass)
+    @JvmField
+    val Step1 = IconLoader.getIcon("/icons/step1.svg", javaClass)
+    @JvmField
+    val Step2 = IconLoader.getIcon("/icons/step2.svg", javaClass)
+
     @JvmField
     val Disabled = IconLoader.getIcon("/icons/running-3.svg", javaClass)
     @JvmField

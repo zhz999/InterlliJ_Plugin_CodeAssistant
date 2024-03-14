@@ -10,12 +10,8 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.wm.StatusBarWidget
 import com.intellij.openapi.wm.impl.status.EditorBasedStatusBarPopup
 import code_assistant.common.Icons
-import code_assistant.settings.CodeAssistantSettingsState
 import code_assistant.tool.Bundle
-import com.intellij.openapi.application.ApplicationManager
-import com.intellij.ui.content.Content
-import org.java_websocket.client.WebSocketClient
-import javax.swing.Timer
+import kotlinx.coroutines.Runnable
 
 class CopilotStatusBarWidget(project: Project) : EditorBasedStatusBarPopup(project, false) {
 
@@ -31,7 +27,7 @@ class CopilotStatusBarWidget(project: Project) : EditorBasedStatusBarPopup(proje
 
     override fun getWidgetState(file: VirtualFile?): WidgetState {
         val state = WidgetState(Bundle.message("copilot.name", ""), " " + Bundle.message("copilot.name", ""), true);
-        state.icon = WidgetStates.icon;
+        state.icon = WidgetStates.icon
         return state;
     }
 
@@ -51,5 +47,8 @@ class CopilotStatusBarWidget(project: Project) : EditorBasedStatusBarPopup(proje
         return CopilotStatusBarWidget(project);
     }
 
+    override fun update(finishUpdate: Runnable?) {
+        super.update(finishUpdate)
+    }
 
 }

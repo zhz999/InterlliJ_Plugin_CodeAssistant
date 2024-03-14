@@ -8,19 +8,20 @@ import com.intellij.openapi.wm.impl.status.widget.StatusBarEditorBasedWidgetFact
 
 class CopilotStatusBarWidgetFactory : StatusBarEditorBasedWidgetFactory() {
 
-  override fun getId(): String {
-    return Bundle.message("copilot.id","");
-  }
+    override fun getId(): String {
+        return Bundle.message("copilot.id", "");
+    }
 
-  override fun getDisplayName(): String {
-    return Bundle.message("copilot.name","");
-  }
+    override fun getDisplayName(): String {
+        return Bundle.message("copilot.name", "");
+    }
 
-  override fun createWidget(project: Project): StatusBarWidget {
-    return CopilotStatusBarWidget(project);
-  }
+    override fun createWidget(project: Project): StatusBarWidget {
+        return CopilotStatusBarWidget(project);
+    }
 
-  override fun disposeWidget(widget: StatusBarWidget) {
-      Disposer.dispose(widget);
-  }
+    override fun disposeWidget(widget: StatusBarWidget) {
+        Disposer.dispose(widget);
+    }
+
 }
