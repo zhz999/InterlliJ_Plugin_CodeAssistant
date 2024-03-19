@@ -1,5 +1,8 @@
 package code_assistant.settings
 
+import code_assistant.common.DoradoCommon
+import code_assistant.common.Message
+import code_assistant.window.ChatWindow
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.ui.JBColor
 import com.intellij.ui.TitledSeparator
@@ -10,7 +13,7 @@ import com.intellij.util.ui.FormBuilder
 import com.intellij.util.ui.JBUI
 import org.java_websocket.client.WebSocketClient
 import org.java_websocket.handshake.ServerHandshake
-import org.jetbrains.annotations.*
+import org.jetbrains.annotations.NotNull
 import java.awt.BorderLayout
 import java.awt.Color
 import java.awt.event.ActionListener
@@ -77,7 +80,7 @@ class CodeAssistantSettingsComponent {
             .addLabeledComponent(JBLabel("ParentMessageId: "), parentMessageId, 1, false)
             .addLabeledComponent(JBLabel("Language: "), language, 1, false)
             .addLabeledComponent(JBLabel("Token: "), tPanel.panel, 6, false)
-             .addLabeledComponent(socketButton, jPanel, 3, false)
+            .addLabeledComponent(socketButton, jPanel, 3, false)
             // Editor Action Settings
             .addVerticalGap(6)
             .addComponent(TitledSeparator("Select Editor Action Use Model Channel"))
@@ -88,37 +91,45 @@ class CodeAssistantSettingsComponent {
         // 按钮事件
         socketButton.addActionListener {
             socketButton.isEnabled = false;
-            println(settings.token)
-            val wsClient = object :
-                WebSocketClient(URI("wss://data.bytedance.net/socket-dorado/copilot/v1/socket?token=" + settings.token)) {
-                override fun onOpen(handshakedata: ServerHandshake?) {
-                    // Message.Info("connection success")
-                    connectionResult.foreground = Color.decode("#62B543") // 62B543  & F26522
-                    connectionResult.text = "Connection success"
-                    close(1000)
-                    socketButton.isEnabled = true;
-                }
 
-                override fun onMessage(message: String?) {}
+            val token = DoradoCommon.getToken()
+            if (token.isEmpty()) {
+                Message.Error("获取Token失败")
+            } else {
+                ChatWindow.WsState.wsToken = token
+                val wsClient = object :
+                    WebSocketClient(URI("wss://data.bytedance.net/socket-dorado/copilot/v1/socket?token=$token")) {
+                    override fun onOpen(handshakedata: ServerHandshake?) {
+                        // Message.Info("connection success")
+                        connectionResult.foreground = Color.decode("#62B543") // 62B543  & F26522
+                        connectionResult.text = "Connection success"
+                        close(1000)
+                        socketButton.isEnabled = true;
+                    }
 
-                override fun onClose(code: Int, reason: String?, remote: Boolean) {
-                    close()
-                    socketButton.isEnabled = true;
-                    println("connection failed: $reason")
-                    if (code != 1000) {
-                        // Message.Error("connection failed:$reason")
-                        connectionResult.foreground = Color.decode("#F26522") // 62B543  & F26522
-                        connectionResult.text = "Connection failed:$reason"
+                    override fun onMessage(message: String?) {}
+
+                    override fun onClose(code: Int, reason: String?, remote: Boolean) {
+                        close()
+                        socketButton.isEnabled = true;
+                        println("connection failed: $reason")
+                        if (code != 1000) {
+                            // Message.Error("connection failed:$reason")
+                            connectionResult.foreground = Color.decode("#F26522") // 62B543  & F26522
+                            connectionResult.text = "Connection failed:$reason"
+                        }
+                    }
+
+                    override fun onError(ex: java.lang.Exception?) {
+                        close()
+                        socketButton.isEnabled = true;
+                        println("connection failed: ${ex?.localizedMessage}")
                     }
                 }
-
-                override fun onError(ex: java.lang.Exception?) {
-                    close()
-                    socketButton.isEnabled = true;
-                    println("connection failed: ${ex?.localizedMessage}")
-                }
+                wsClient.connect()
             }
-            wsClient.connect()
+
+
         }
         submitButton.addActionListener {
             var counts = 0

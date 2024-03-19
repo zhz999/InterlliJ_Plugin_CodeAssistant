@@ -1,17 +1,12 @@
 package code_assistant.window
 
+import code_assistant.common.DoradoCommon
 import code_assistant.common.Icons
 import code_assistant.common.Message
 import code_assistant.settings.CodeAssistantSettingsState
 import code_assistant.statusbar.copilot.CopilotStatusBarWidget
-import com.github.weisj.jsvg.x
 import com.google.gson.Gson
 import com.google.gson.JsonObject
-import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.openapi.actionSystem.DefaultActionGroup
-import com.intellij.openapi.application.Application
-import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.project.DumbAwareAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.openapi.ui.Messages
@@ -31,7 +26,10 @@ import org.java_websocket.client.WebSocketClient
 import org.java_websocket.handshake.ServerHandshake
 import org.json.JSONObject
 import java.awt.*
-import java.awt.event.*
+import java.awt.event.ActionEvent
+import java.awt.event.ActionListener
+import java.awt.event.FocusEvent
+import java.awt.event.FocusListener
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
@@ -71,7 +69,7 @@ class ChatWindow : ToolWindowFactory {
 
         @JvmStatic
         @Volatile
-        var wsToken: String = CodeAssistantSettingsState.getInstance().token
+        var wsToken: String = ""
 
         @JvmStatic
         @Volatile
@@ -92,6 +90,9 @@ class ChatWindow : ToolWindowFactory {
 
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
         try {
+
+            // _Post.Init("https://data.bytedance.net/socket-dorado/copilot/token", null)
+
             val contentFactory = ContentFactory.getInstance()
             val component = toolWindow.component
             val size = SwingUtilities.getRoot(component).size
@@ -112,7 +113,6 @@ class ChatWindow : ToolWindowFactory {
                 if (WsState.wsClient == null || WsState.wsClient?.isOpen == false) {
                     WsState.isReconnect = true
                     println("尝试重连")
-                    WsState.wsToken = CodeAssistantSettingsState.getInstance().token
                     val Copilot = toolWindow.contentManager.findContent("Copilot")
                     // 先移除销毁掉原来的Context
                     if (Copilot !== null) toolWindow.contentManager.removeContent(Copilot, true)
@@ -276,9 +276,9 @@ class ChatWindow : ToolWindowFactory {
                 counts += 1
                 val flag = counts % 2
                 if (flag == 1) {
-                   // sendBtn.setEnabled(true);
+                    // sendBtn.setEnabled(true);
                 } else {
-                   // sendBtn.setEnabled(false);
+                    // sendBtn.setEnabled(false);
                 }
             })
             connectWs(
@@ -466,6 +466,14 @@ class ChatWindow : ToolWindowFactory {
             WsState.wsPingTimer = Timer(3000, ActionListener {
                 WsState.wsClient?.sendPing()
             })
+        }
+
+        val token = DoradoCommon.getToken()
+        if (token.isEmpty()) {
+            Message.Error("获取Token失败")
+            return
+        } else {
+            WsState.wsToken = token
         }
 
         WsState.wsClient = object :
