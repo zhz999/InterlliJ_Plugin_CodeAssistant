@@ -23,6 +23,8 @@ object Icons {
     val Disabled = IconLoader.getIcon("/icons/running-3.svg", javaClass)
     @JvmField
     val Running = IconLoader.getIcon("/icons/running-2.svg", javaClass)
+    @JvmField
+    val Copy = IconLoader.getIcon("/icons/copy.svg", javaClass)
 
     @JvmField
     val MessageInfo = IconLoader.getIcon("/icons/message-info-icon.svg", javaClass)

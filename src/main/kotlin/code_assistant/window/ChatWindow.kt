@@ -26,10 +26,9 @@ import org.java_websocket.client.WebSocketClient
 import org.java_websocket.handshake.ServerHandshake
 import org.json.JSONObject
 import java.awt.*
-import java.awt.event.ActionEvent
-import java.awt.event.ActionListener
-import java.awt.event.FocusEvent
-import java.awt.event.FocusListener
+import java.awt.datatransfer.Clipboard
+import java.awt.datatransfer.StringSelection
+import java.awt.event.*
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
@@ -41,6 +40,7 @@ import javax.swing.event.DocumentEvent
 import javax.swing.text.BadLocationException
 import javax.swing.text.Style
 import javax.swing.text.StyleConstants
+import javax.swing.text.StyleContext
 import javax.swing.text.html.HTMLDocument
 import javax.swing.text.html.HTMLEditorKit
 
@@ -86,6 +86,9 @@ class ChatWindow : ToolWindowFactory {
         @JvmStatic
         @Volatile
         var doradoContent: Content? = null
+
+        @JvmStatic
+        var codeFlag = false
     }
 
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
@@ -170,8 +173,30 @@ class ChatWindow : ToolWindowFactory {
         textPane.isDoubleBuffered = true
         val scrollPane = JBScrollPane(textPane)
         scrollPane.isDoubleBuffered = true
-        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        scrollPane.border = BorderFactory.createEmptyBorder();
         panel.add(scrollPane, BorderLayout.CENTER)
+
+        // 添加鼠标事件
+        val menuItem = JMenuItem("Copy").apply {
+            icon = Icons.Copy
+            addActionListener {
+                val copyTxt = textPane.selectedText ?: return@addActionListener
+                val selection = StringSelection(copyTxt)
+                val clipboard: Clipboard = Toolkit.getDefaultToolkit().systemClipboard
+                clipboard.setContents(selection, null)
+            }
+        }
+        val popupMenu = JPopupMenu()
+        popupMenu.add(menuItem)
+        textPane.addMouseListener(object : MouseAdapter() {
+            override fun mousePressed(e: MouseEvent) {
+                if (e.button == MouseEvent.BUTTON3) {
+                    val copyTxt = textPane.selectedText ?: return
+                    popupMenu.show(e.component, e.x, e.y)
+                }
+            }
+        })
+
 
         // 输入面板
         val input = JBTextArea()
@@ -221,14 +246,14 @@ class ChatWindow : ToolWindowFactory {
         })
         input.addFocusListener(object : FocusListener {
             override fun focusGained(e: FocusEvent) {
-                Util.paintBorder(panel.graphics, input)
+                if (panel.graphics !== null) Util.paintBorder(panel.graphics, input)
                 if (input.text.isEmpty()) {
                     sendBtn.isEnabled = false
                 }
             }
 
             override fun focusLost(e: FocusEvent) {
-                Util.paintBorder(panel.graphics, input)
+                if (panel.graphics !== null) Util.paintBorder(panel.graphics, input)
                 if (input.text.isEmpty()) {
                     sendBtn.isEnabled = false
                 }
@@ -303,7 +328,7 @@ class ChatWindow : ToolWindowFactory {
     ) {
         val text: String = input.text.replace("\n", "\n\n")
         val doc = outPanel.styledDocument
-        val style: Style = doc.addStyle("default", null)
+        val style: Style = doc.addStyle("Issue", null)
         StyleConstants.setFontSize(style, 12);
         val htmlKit = HTMLEditorKit()
         try {
@@ -338,7 +363,7 @@ class ChatWindow : ToolWindowFactory {
                     if (!WsState.reTimer!!.isRunning) {
                         WsState.reTimer!!.start()
                     }
-                }else{
+                } else {
                     Message.Warn("Copilot Connected!")
                 }
             }
@@ -481,7 +506,13 @@ class ChatWindow : ToolWindowFactory {
             WsState.wsToken = token
         }
 
-        Message.Info("重连 Copilot >>>>>")
+        // 创建一个样式化文本的样式
+        val styleContext = StyleContext()
+        val codeStyle = styleContext.addStyle("CodeStyle", null)
+        StyleConstants.setFontFamily(codeStyle, "Courier New")
+        StyleConstants.setFontSize(codeStyle, 10)
+        StyleConstants.setForeground(codeStyle, JBColor.decode("#865B03"))
+
 
         WsState.wsClient = object :
             WebSocketClient(URI("wss://data.bytedance.net/socket-dorado/copilot/v1/socket?token=" + WsState.wsToken)) {
@@ -494,13 +525,14 @@ class ChatWindow : ToolWindowFactory {
                 if (!WsState.wsPingTimer!!.isRunning) {
                     WsState.wsPingTimer!!.start()
                 }
+                if (WsState.isReconnect) Message.Info("Copilot Success!")
             }
 
             override fun onMessage(message: String?) {
                 val doc = textPane.styledDocument
                 val verticalScrollBar = scrollPane.verticalScrollBar
                 verticalScrollBar.value = verticalScrollBar.maximum
-                val style: Style = doc.addStyle("default", null)
+                val style: Style = doc.addStyle("Solution", null)
                 StyleConstants.setFontSize(style, 10);
                 // println(message)
                 val content = JSONObject(message).getJSONObject("result").getJSONObject("content")
@@ -515,8 +547,42 @@ class ChatWindow : ToolWindowFactory {
                     }
                     Util.stop(submitButton)
                 }
+
+                if (content.has("type") && content.getString("type") == "answer_start") {
+                    // 开始接收数据
+                    // WsState.codeArray = arrayOf("")
+                }
+
                 if (content.has("part")) {
-                    doc.insertString(doc.length, content.getString("part"), style);
+                    val txt = content.getString("part")
+                    if (txt.contains("```") || txt.contains("``")) {
+                        WsState.codeFlag = !WsState.codeFlag
+                        if (!WsState.codeFlag) {
+                            // 结束时
+                            try {
+                                val strTmp = txt.split("```")
+                                doc.insertString(doc.length, strTmp[0] + "```", codeStyle);
+                                doc.insertString(doc.length, strTmp[1], style);
+                            } catch (_: Exception) {
+
+                            }
+                        } else {
+                            // 开始时
+                            try {
+                                val strTmp = txt.split("```")
+                                doc.insertString(doc.length, strTmp[0], style);
+                                doc.insertString(doc.length, "```" + strTmp[1], codeStyle);
+                            } catch (_: Exception) {
+
+                            }
+                        }
+                    } else {
+                        if (WsState.codeFlag) {
+                            doc.insertString(doc.length, txt, codeStyle);
+                        } else {
+                            doc.insertString(doc.length, txt, style);
+                        }
+                    }
                 }
             }
 
