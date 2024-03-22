@@ -338,6 +338,8 @@ class ChatWindow : ToolWindowFactory {
                     if (!WsState.reTimer!!.isRunning) {
                         WsState.reTimer!!.start()
                     }
+                }else{
+                    Message.Warn("Copilot Connected!")
                 }
             }
         }
@@ -461,12 +463,15 @@ class ChatWindow : ToolWindowFactory {
         toolWindow: ToolWindow
     ) {
 
-        if (WsState.wsPingTimer == null) {
-            // 创建一个定时器，用于发送ping
-            WsState.wsPingTimer = Timer(3000, ActionListener {
-                WsState.wsClient?.sendPing()
-            })
+        if (WsState.wsPingTimer !== null) {
+            WsState.wsPingTimer?.stop()
+            WsState.wsPingTimer = null
         }
+
+        // 创建一个定时器，用于发送ping
+        WsState.wsPingTimer = Timer(3000, ActionListener {
+            WsState.wsClient?.sendPing()
+        })
 
         val token = DoradoCommon.getToken()
         if (token.isEmpty()) {
@@ -475,6 +480,8 @@ class ChatWindow : ToolWindowFactory {
         } else {
             WsState.wsToken = token
         }
+
+        Message.Info("重连 Copilot >>>>>")
 
         WsState.wsClient = object :
             WebSocketClient(URI("wss://data.bytedance.net/socket-dorado/copilot/v1/socket?token=" + WsState.wsToken)) {
