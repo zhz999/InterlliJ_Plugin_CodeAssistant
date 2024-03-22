@@ -37,13 +37,11 @@ import java.net.URI
 import java.net.URL
 import javax.swing.*
 import javax.swing.event.DocumentEvent
-import javax.swing.text.BadLocationException
-import javax.swing.text.Style
-import javax.swing.text.StyleConstants
-import javax.swing.text.StyleContext
+import javax.swing.text.*
+import javax.swing.text.html.HTML
 import javax.swing.text.html.HTMLDocument
 import javax.swing.text.html.HTMLEditorKit
-
+import javax.swing.text.html.parser.ParserDelegator
 
 /**
  *
@@ -331,18 +329,13 @@ class ChatWindow : ToolWindowFactory {
         val style: Style = doc.addStyle("Issue", null)
         StyleConstants.setFontSize(style, 12);
         val htmlKit = HTMLEditorKit()
-        try {
-            val htmlContent = """
-                <html>
-                    <body>
+        val htmlContent = """<html><body>
                         <div style="border:'1px solid #dee0e3';border-radius:'10px';padding:'8px';background:'#dee0e3';">${text}</div>
-                        <br>
-                    </body>
-                </html>
-            """.trimIndent()
+                        <br></body></html>""".trimIndent()
+        try {
             htmlKit.insertHTML(doc as HTMLDocument, doc.length, htmlContent, 0, 0, null)
         } catch (ex: BadLocationException) {
-            ex.printStackTrace()
+            Message.Error("写入数据出错:${ex.message}")
         }
         //buttonPanel.setEnabled(false)
         //input.setEnabled(false);
@@ -755,6 +748,9 @@ class ChatWindow : ToolWindowFactory {
 
 
 }
+
+
+
 
 
 
