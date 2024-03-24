@@ -38,10 +38,8 @@ import java.net.URL
 import javax.swing.*
 import javax.swing.event.DocumentEvent
 import javax.swing.text.*
-import javax.swing.text.html.HTML
 import javax.swing.text.html.HTMLDocument
 import javax.swing.text.html.HTMLEditorKit
-import javax.swing.text.html.parser.ParserDelegator
 
 /**
  *
@@ -627,6 +625,15 @@ class ChatWindow : ToolWindowFactory {
         inputPanel: JComponent,
         sendBtn: JButton
     ) {
+
+
+        // 创建一个样式化文本的样式
+        val styleContext = StyleContext()
+        val codeStyle = styleContext.addStyle("CodeStyle", null)
+        StyleConstants.setFontFamily(codeStyle, "Courier New")
+        StyleConstants.setFontSize(codeStyle, 10)
+        StyleConstants.setForeground(codeStyle, JBColor.decode("#865B03"))
+
         //sendPanel.setEnabled(false)
         //inputPanel.setEnabled(false);
         var counts = 0
@@ -739,7 +746,36 @@ class ChatWindow : ToolWindowFactory {
 
             override fun process(chunks: MutableList<String>?) {
                 for (chunk in chunks!!) {
-                    doc.insertString(doc.length, chunk, style);
+                    if (chunk.contains("```") || chunk.contains("``")) {
+                        WsState.codeFlag = !WsState.codeFlag
+                        if (!WsState.codeFlag) {
+                            // 结束时
+                            try {
+                                val strTmp = chunk.split("```")
+                                doc.insertString(doc.length, strTmp[0] + "```", codeStyle);
+                                doc.insertString(doc.length, strTmp[1], style);
+                            } catch (_: Exception) {
+
+                            }
+                        } else {
+                            // 开始时
+                            try {
+                                val strTmp = chunk.split("```")
+                                doc.insertString(doc.length, strTmp[0], style);
+                                doc.insertString(doc.length, "```" + strTmp[1], codeStyle);
+                            } catch (_: Exception) {
+
+                            }
+                        }
+                    } else {
+                        if (WsState.codeFlag) {
+                            doc.insertString(doc.length, chunk, codeStyle);
+                        } else {
+                            doc.insertString(doc.length, chunk, style);
+                        }
+                    }
+
+                    // doc.insertString(doc.length, chunk, style);
                 }
             }
         }
